@@ -1,159 +1,253 @@
-import { useState, useEffect } from "react";
-import { ethers } from "ethers";
-import { motion } from "framer-motion";
-import { Activity, ShieldCheck, Zap, Terminal, ExternalLink, TrendingUp, TrendingDown, Cpu } from "lucide-react";
-import PantheonABI from "./PantheonCouncil.json";
+import React, { useState, useEffect } from 'react';
+import { ethers } from 'ethers';
+import AgentCard from './components/AgentCard';
+import ConsensusPanel from './components/ConsensusPanel';
 
-// ⚠️ VERIFY THIS MATCHES YOUR .ENV EXACTLY
-const CONTRACT_ADDRESS = "0x2ad63F61313aa0Df129EB222381042cf64cBCd7C"; 
-const AMOY_RPC = "https://rpc-amoy.polygon.technology/";
+const AGENTS = [
+  { 
+    emoji: '🤓', 
+    name: 'THE ANALYST', 
+    role: 'Technical Expert',
+    color: 'blue'
+  },
+  { 
+    emoji: '🛡️', 
+    name: 'THE SKEPTIC', 
+    role: 'Risk Manager',
+    color: 'orange'
+  },
+  { 
+    emoji: '🚀', 
+    name: 'THE DEGEN', 
+    role: 'Momentum Trader',
+    color: 'purple'
+  }
+];
 
-const App = () => {
-  const [trades, setTrades] = useState([]);
+const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
+const RPC_URL = import.meta.env.VITE_RPC_URL;
+
+const CONTRACT_ABI = [
+  "function getTotalDebates() external view returns (uint256)",
+  "function getLatestDebate() external view returns (tuple(uint256 id, uint256 timestamp, string symbol, string analystView, string skepticView, string degenView, string consensus, uint256 finalConfidence, address recorder))",
+  "function getDebate(uint256 debateId) external view returns (tuple(uint256 id, uint256 timestamp, string symbol, string analystView, string skepticView, string degenView, string consensus, uint256 finalConfidence, address recorder))"
+];
+
+function App() {
+  const [latestDebate, setLatestDebate] = useState(null);
+  const [opinions, setOpinions] = useState([null, null, null]);
+  const [consensus, setConsensus] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [totalDebates, setTotalDebates] = useState(0);
+
+  // Parse debate data from contract format
+  const parseDebateData = (debate) => {
+    try {
+      // Parse agent views: "DECISION|CONFIDENCE|REASONING"
+      const parseView = (viewStr) => {
+        const [decision, confidence, reasoning] = viewStr.split('|');
+        return {
+          decision,
+          confidence: parseInt(confidence),
+          reasoning,
+          riskLevel: decision === 'BUY' ? 7 : decision === 'SELL' ? 3 : 5
+        };
+      };
+
+      const analystOp = parseView(debate.analystView);
+      const skepticOp = parseView(debate.skepticView);
+      const degenOp = parseView(debate.degenView);
+
+      // Parse consensus: "DECISION|AGREEMENT|CONFIDENCE"
+      const [decision, agreement, confidence] = debate.consensus.split('|');
+      
+      // Calculate votes
+      const votes = {
+        BUY: [analystOp, skepticOp, degenOp].filter(o => o.decision === 'BUY').length,
+        SELL: [analystOp, skepticOp, degenOp].filter(o => o.decision === 'SELL').length,
+        HOLD: [analystOp, skepticOp, degenOp].filter(o => o.decision === 'HOLD').length
+      };
+
+      setOpinions([analystOp, skepticOp, degenOp]);
+      setConsensus({
+        decision,
+        agreement,
+        confidence: parseInt(confidence),
+        votes
+      });
+      setLatestDebate(debate);
+    } catch (error) {
+      console.error('Error parsing debate:', error);
+    }
+  };
+
+  // Fetch latest debate from blockchain
+  const fetchLatestDebate = async () => {
+    try {
+      const provider = new ethers.JsonRpcProvider(RPC_URL);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+
+      const total = await contract.getTotalDebates();
+      setTotalDebates(Number(total));
+
+      if (Number(total) > 0) {
+        const debate = await contract.getLatestDebate();
+        parseDebateData(debate);
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching debate:', error);
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchTrades = async () => {
-      try {
-        const provider = new ethers.JsonRpcProvider(AMOY_RPC);
-        const contract = new ethers.Contract(CONTRACT_ADDRESS, PantheonABI.abi, provider);
+    fetchLatestDebate();
 
-        const totalTrades = await contract.getTotalTrades();
-        const tradeCount = Number(totalTrades);
-        
-        let loadedTrades = [];
-        // Fetch last 10 trades
-        for (let i = tradeCount - 1; i >= Math.max(0, tradeCount - 10); i--) {
-          const trade = await contract.getTrade(i);
-          loadedTrades.push({
-            id: Number(trade.id),
-            symbol: trade.symbol,
-            side: trade.side,
-            entry: Number(trade.entryPrice),
-            confidence: Number(trade.confidence),
-            verdict: trade.verdict,
-            timestamp: Number(trade.timestamp),
-          });
-        }
-        setTrades(loadedTrades);
-      } catch (error) {
-        console.error("Error fetching trades:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTrades();
-    const interval = setInterval(fetchTrades, 5000); // Live Refresh
+    // Poll every 10 seconds
+    const interval = setInterval(fetchLatestDebate, 10000);
     return () => clearInterval(interval);
   }, []);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin text-6xl mb-4">🏛️</div>
+          <p className="text-slate-400 font-mono">Loading Council...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-pantheon-bg text-pantheon-text font-sans">
-      {/* NAVBAR */}
-      <nav className="fixed top-0 w-full glass-panel z-50 px-8 py-5 flex justify-between items-center border-b-0 border-pantheon-accent/20">
-        <div className="flex items-center gap-3">
-          <div className="bg-pantheon-accent/10 p-2 rounded-lg border border-pantheon-accent/20">
-            <Terminal className="text-pantheon-accent" size={20} />
-          </div>
-          <h1 className="text-xl font-bold tracking-tight font-mono text-white">PANTHEON <span className="text-pantheon-accent">PRO</span></h1>
-        </div>
-        <div className="flex items-center gap-6 text-sm font-mono text-gray-400">
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-pantheon-green/10 border border-pantheon-green/20">
-             <div className="w-1.5 h-1.5 rounded-full bg-pantheon-green status-dot animate-pulse"></div>
-             <span className="text-pantheon-green">SYSTEM ONLINE</span>
-          </div>
-          <span>POLYGON AMOY</span>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-slate-950 text-white">
+      {/* Noise texture overlay */}
+      <div className="fixed inset-0 opacity-20 pointer-events-none" style={{
+        backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 400 400\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' /%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\' /%3E%3C/svg%3E")'
+      }} />
 
-      <main className="pt-32 px-6 max-w-7xl mx-auto pb-20">
-        {/* HEADER STATS */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-          <StatCard icon={<Cpu size={24} />} title="AI ENGINE" value="Gemini 2.5 Pro" color="text-pantheon-gold" />
-          <StatCard icon={<Activity size={24} />} title="TOTAL SIGNALS" value={trades.length.toString()} color="text-pantheon-accent" />
-          <StatCard icon={<ShieldCheck size={24} />} title="AUDIT STATUS" value="VERIFIED" color="text-pantheon-green" />
-          <StatCard icon={<Zap size={24} />} title="LATENCY" value="12ms" color="text-purple-400" />
-        </div>
-
-        {/* FEED HEADER */}
-        <div className="flex justify-between items-end mb-6">
-            <h2 className="text-2xl font-bold flex items-center gap-3 font-mono tracking-tight text-white">
-              <Activity className="text-pantheon-accent" /> SIGNAL FEED
-            </h2>
-            <div className="text-xs text-gray-500 font-mono">LIVE CONNECTION ESTABLISHED</div>
-        </div>
-
-        {/* TRADES LIST */}
-        {loading ? (
-          <div className="glass-panel p-20 text-center rounded-2xl flex flex-col items-center justify-center gap-4">
-             <div className="w-12 h-12 border-4 border-pantheon-accent border-t-transparent rounded-full animate-spin"></div>
-             <div className="text-pantheon-accent animate-pulse font-mono">ESTABLISHING NEURAL LINK...</div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {trades.map((trade, idx) => (
-              <motion.div
-                key={trade.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className="glass-panel p-6 rounded-xl flex flex-col md:flex-row items-center justify-between group relative overflow-hidden"
-              >
-                {/* DECORATIVE BACKGROUND ACCENT */}
-                <div className={`absolute left-0 top-0 bottom-0 w-1 ${trade.side === 'BUY' ? 'bg-pantheon-green' : 'bg-pantheon-red'}`}></div>
-
-                <div className="flex items-center gap-6 w-full md:w-auto">
-                  <div className={`p-4 rounded-xl ${trade.side === 'BUY' ? 'bg-pantheon-green/10 text-pantheon-green' : 'bg-pantheon-red/10 text-pantheon-red'}`}>
-                    {trade.side === 'BUY' ? <TrendingUp size={28} /> : <TrendingDown size={28} />}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-3 mb-1">
-                      <h3 className="text-2xl font-bold font-mono tracking-tight text-white">{trade.symbol}</h3>
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded border ${trade.side === 'BUY' ? 'border-pantheon-green text-pantheon-green' : 'border-pantheon-red text-pantheon-red'}`}>
-                        {trade.side}
-                      </span>
-                    </div>
-                    <p className="text-gray-500 text-xs font-mono">{new Date(trade.timestamp * 1000).toLocaleString()}</p>
-                  </div>
+      {/* Header */}
+      <header className="relative border-b border-slate-800 bg-slate-900/50 backdrop-blur-xl">
+        <div className="container mx-auto px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="text-4xl">🏛️</div>
+              <div>
+                <h1 className="text-3xl font-black tracking-tight">
+                  PANTHEON <span className="text-purple-400">PRO</span>
+                </h1>
+                <p className="text-sm text-slate-400 font-mono">Multi-Agent Trading Council</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <div className="px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-sm font-mono text-green-400">SYSTEM ONLINE</span>
                 </div>
+              </div>
+              
+              <div className="px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+                <div className="text-sm text-slate-400">POLYGON AMOY</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
 
-                <div className="flex-1 px-8 my-4 md:my-0 border-l border-white/5 ml-8 h-full flex flex-col justify-center">
-                  <p className="text-gray-300 text-lg leading-relaxed font-light">"{trade.verdict}"</p>
-                </div>
+      {/* Main Content */}
+      <main className="container mx-auto px-6 py-12">
+        {/* Stats Bar */}
+        <div className="grid grid-cols-4 gap-4 mb-12">
+          <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 rounded-xl p-4">
+            <div className="text-sm text-slate-400 mb-1">AI ENGINE</div>
+            <div className="text-lg font-bold text-purple-400">Gemini 2.5 Pro</div>
+          </div>
+          
+          <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 rounded-xl p-4">
+            <div className="text-sm text-slate-400 mb-1">TOTAL DEBATES</div>
+            <div className="text-lg font-bold">{totalDebates}</div>
+          </div>
+          
+          <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 rounded-xl p-4">
+            <div className="text-sm text-slate-400 mb-1">AUDIT STATUS</div>
+            <div className="text-lg font-bold text-green-400">VERIFIED</div>
+          </div>
+          
+          <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 rounded-xl p-4">
+            <div className="text-sm text-slate-400 mb-1">LATENCY</div>
+            <div className="text-lg font-bold text-purple-400">12ms</div>
+          </div>
+        </div>
 
-                <div className="w-full md:w-auto flex flex-col items-end gap-3 min-w-[150px]">
-                  <div className="text-right">
-                    <div className="text-xs text-gray-500 font-mono mb-1">AI CONFIDENCE</div>
-                    <div className="text-xl font-bold text-pantheon-accent">{trade.confidence}%</div>
-                  </div>
-                  <a 
-                    href={`https://amoy.polygonscan.com/tx/${CONTRACT_ADDRESS}`}
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="flex items-center gap-2 text-xs text-gray-500 hover:text-pantheon-accent transition-colors"
-                  >
-                    VERIFY ONCHAIN <ExternalLink size={12} />
-                  </a>
+        {/* Section Title */}
+        <div className="mb-8">
+          <h2 className="text-3xl font-black mb-2">
+            <span className="text-purple-400">🗳️</span> COUNCIL CHAMBER
+          </h2>
+          <p className="text-slate-400">Three AI agents debate market conditions in real-time</p>
+        </div>
+
+        {/* Agent Opinions */}
+        <div className="grid grid-cols-3 gap-6 mb-12">
+          {AGENTS.map((agent, index) => (
+            <AgentCard
+              key={agent.name}
+              agent={agent}
+              opinion={opinions[index]}
+              index={index}
+            />
+          ))}
+        </div>
+
+        {/* Consensus */}
+        {consensus && (
+          <div className="mb-12">
+            <ConsensusPanel consensus={consensus} />
+          </div>
+        )}
+
+        {/* On-Chain Proof */}
+        {latestDebate && (
+          <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 rounded-xl p-6">
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <span>⛓️</span> Blockchain Verification
+            </h3>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <div className="text-slate-400 mb-1">Debate ID</div>
+                <div className="font-mono">#{latestDebate.id.toString()}</div>
+              </div>
+              <div>
+                <div className="text-slate-400 mb-1">Block Time</div>
+                <div className="font-mono">
+                  {new Date(Number(latestDebate.timestamp) * 1000).toLocaleString()}
                 </div>
-              </motion.div>
-            ))}
+              </div>
+              <div className="col-span-2">
+                <div className="text-slate-400 mb-1">Contract Address</div>
+                <div className="font-mono text-xs break-all text-purple-400">
+                  {CONTRACT_ADDRESS}
+                </div>
+              </div>
+            </div>
+            <a
+              href={`https://amoy.polygonscan.com/address/${CONTRACT_ADDRESS}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg transition-colors"
+            >
+              <span className="text-sm">View on PolygonScan</span>
+              <span>↗</span>
+            </a>
           </div>
         )}
       </main>
     </div>
   );
-};
-
-const StatCard = ({ icon, title, value, color }) => (
-  <motion.div 
-    whileHover={{ y: -5 }}
-    className="glass-panel p-6 rounded-xl relative overflow-hidden"
-  >
-    <div className={`absolute top-4 right-4 opacity-20 ${color}`}>{icon}</div>
-    <div className="text-gray-500 text-xs font-mono mb-2 tracking-wider">{title}</div>
-    <div className={`text-2xl font-bold ${color}`}>{value}</div>
-  </motion.div>
-);
+}
 
 export default App;
