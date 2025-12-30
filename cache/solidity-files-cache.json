@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/workspaces/pantheon-trading/contracts/PantheonCouncil.sol": {
-      "lastModificationDate": 1767075021090,
-      "contentHash": "ad219a2e61b1d9b055af685f0ddaa099",
+      "lastModificationDate": 1767084906485,
+      "contentHash": "d16b57af0f24bc1cae3ea7ac8c8a27a8",
       "sourceName": "contracts/PantheonCouncil.sol",
       "solcConfig": {
         "version": "0.8.20",
@@ -29,10 +29,7 @@
           }
         }
       },
-      "imports": [
-        "@openzeppelin/contracts/token/ERC721/ERC721.sol",
-        "@openzeppelin/contracts/access/Ownable.sol"
-      ],
+      "imports": [],
       "versionPragmas": [
         "^0.8.20"
       ],

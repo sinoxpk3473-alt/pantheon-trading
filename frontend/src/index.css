@@ -1,46 +1,44 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background-color: #080a10;
-  color: #E0E6ED;
-  overflow-x: hidden;
-  font-family: 'Inter', sans-serif;
+@layer base {
+  * {
+    @apply border-white/10;
+  }
+  
+  body {
+    @apply bg-black text-white antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
 }
 
-/* GOD TIER GLASSMORPHISM */
-.glass-panel {
-  background: rgba(18, 22, 32, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-}
-
-.glass-panel:hover {
-  border-color: rgba(41, 98, 255, 0.5);
-  box-shadow: 0 0 20px rgba(41, 98, 255, 0.1);
-}
-
-/* GLOW EFFECTS */
-.glow-text {
-  text-shadow: 0 0 15px rgba(41, 98, 255, 0.6);
-}
-
-.status-dot {
-  box-shadow: 0 0 10px currentColor;
-}
-
-/* SCROLLBAR */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #080a10; 
-}
-::-webkit-scrollbar-thumb {
-  background: #2962FF; 
-  border-radius: 4px;
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  
+  /* Smooth animations */
+  * {
+    scroll-behavior: smooth;
+  }
 }
