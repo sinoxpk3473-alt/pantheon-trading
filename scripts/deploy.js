@@ -2,7 +2,7 @@ const hre = require("hardhat");
 
 async function main() {
   console.log("🚀 Deploying PantheonCouncil...");
-  
+
   const [deployer] = await hre.ethers.getSigners();
   console.log("📝 Deploying with:", deployer.address);
 
@@ -14,11 +14,12 @@ async function main() {
   await pantheon.waitForDeployment();
 
   const address = await pantheon.getAddress();
+
   console.log("✅ Deployed to:", address);
   console.log("\n📋 Add to .env:");
   console.log("CONTRACT_ADDRESS=" + address);
   console.log("\n🔍 View on PolygonScan:");
-  console.log("https://mumbai.polygonscan.com/address/" + address);
+  console.log("https://amoy.polygonscan.com/address/" + address);
 }
 
 main().catch(console.error);

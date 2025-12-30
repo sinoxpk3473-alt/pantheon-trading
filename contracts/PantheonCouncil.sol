@@ -47,7 +47,6 @@ contract PantheonCouncil is ERC721, Ownable {
         string memory verdict
     ) external onlyOwner returns (uint256) {
         uint256 tradeId = _tradeCounter++;
-        
         trades[tradeId] = Trade({
             id: tradeId,
             timestamp: block.timestamp,
@@ -59,7 +58,6 @@ contract PantheonCouncil is ERC721, Ownable {
             verdict: verdict,
             executed: true
         });
-
         emit TradeRecorded(tradeId, symbol, side);
         return tradeId;
     }
