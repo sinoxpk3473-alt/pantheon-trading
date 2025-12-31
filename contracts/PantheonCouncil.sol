@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+/**
+ * @title PantheonCouncil
+ * @dev Records AI agent debates on-chain for transparency and auditability
+ */
 contract PantheonCouncil {
     struct Debate {
         uint256 id;
@@ -22,10 +26,18 @@ contract PantheonCouncil {
         string symbol,
         string consensus,
         uint256 finalConfidence,
-        address recorder
+        address indexed recorder
     );
 
-    // Record a new debate - NO OWNER CHECK, ANYONE CAN RECORD
+    /**
+     * @dev Record a new AI council debate
+     * @param symbol Trading pair symbol (e.g., "ETH")
+     * @param analystView Technical analyst's opinion
+     * @param skepticView Risk manager's opinion
+     * @param degenView Momentum trader's opinion
+     * @param consensus Final consensus decision
+     * @param finalConfidence Average confidence level (1-100)
+     */
     function recordDebate(
         string memory symbol,
         string memory analystView,
@@ -34,13 +46,12 @@ contract PantheonCouncil {
         string memory consensus,
         uint256 finalConfidence
     ) external {
-        // Validate inputs
-        require(bytes(symbol).length > 0, "Symbol cannot be empty");
-        require(bytes(analystView).length > 0, "Analyst view cannot be empty");
-        require(bytes(skepticView).length > 0, "Skeptic view cannot be empty");
-        require(bytes(degenView).length > 0, "Degen view cannot be empty");
-        require(bytes(consensus).length > 0, "Consensus cannot be empty");
-        require(finalConfidence > 0 && finalConfidence <= 100, "Confidence must be 1-100");
+        require(bytes(symbol).length > 0, "Symbol required");
+        require(bytes(analystView).length > 0, "Analyst view required");
+        require(bytes(skepticView).length > 0, "Skeptic view required");
+        require(bytes(degenView).length > 0, "Degen view required");
+        require(bytes(consensus).length > 0, "Consensus required");
+        require(finalConfidence > 0 && finalConfidence <= 100, "Invalid confidence");
 
         Debate memory newDebate = Debate({
             id: debates.length,
@@ -66,43 +77,50 @@ contract PantheonCouncil {
         );
     }
 
-    // Get total number of debates
+    /**
+     * @dev Get total number of debates recorded
+     */
     function getTotalDebates() external view returns (uint256) {
         return debates.length;
     }
 
-    // Get a specific debate by ID
+    /**
+     * @dev Get a specific debate by ID
+     */
     function getDebate(uint256 debateId) external view returns (Debate memory) {
-        require(debateId < debates.length, "Debate does not exist");
+        require(debateId < debates.length, "Invalid debate ID");
         return debates[debateId];
     }
 
-    // Get the latest debate
+    /**
+     * @dev Get the most recent debate
+     */
     function getLatestDebate() external view returns (Debate memory) {
-        require(debates.length > 0, "No debates recorded yet");
+        require(debates.length > 0, "No debates yet");
         return debates[debates.length - 1];
     }
 
-    // Get all debates (be careful with gas limits for large arrays)
+    /**
+     * @dev Get all debates (use with caution for large arrays)
+     */
     function getAllDebates() external view returns (Debate[] memory) {
         return debates;
     }
 
-    // Get recent debates (last N debates)
+    /**
+     * @dev Get the N most recent debates
+     */
     function getRecentDebates(uint256 count) external view returns (Debate[] memory) {
-        require(count > 0, "Count must be greater than 0");
+        require(count > 0, "Count must be > 0");
         
         uint256 total = debates.length;
-        if (count > total) {
-            count = total;
-        }
+        if (count > total) count = total;
 
-        Debate[] memory recentDebates = new Debate[](count);
-        
+        Debate[] memory recent = new Debate[](count);
         for (uint256 i = 0; i < count; i++) {
-            recentDebates[i] = debates[total - count + i];
+            recent[i] = debates[total - count + i];
         }
 
-        return recentDebates;
+        return recent;
     }
 }
