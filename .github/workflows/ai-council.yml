@@ -1,0 +1,45 @@
+name: AI Council Debate
+
+on:
+  schedule:
+    # Run every 6 hours (more reasonable than 5 minutes to avoid rate limits)
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Allow manual trigger from Actions tab
+
+jobs:
+  debate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      
+      - name: 📦 Install dependencies
+        run: |
+          cd backend
+          npm ci
+      
+      - name: 🏛️ Run AI Council Debate
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          CONTRACT_ADDRESS: ${{ secrets.CONTRACT_ADDRESS }}
+          RPC_URL: ${{ secrets.RPC_URL }}
+        run: |
+          cd backend
+          node agent.js
+      
+      - name: ✅ Debate Complete
+        if: success()
+        run: echo "🎉 Debate recorded successfully on blockchain!"
+      
+      - name: ❌ Debate Failed
+        if: failure()
+        run: echo "⚠️ Debate failed. Check logs above for details."
