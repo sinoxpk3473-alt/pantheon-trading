@@ -1,215 +1,556 @@
 import React, { useState, useEffect } from 'react';
-import { ethers } from 'ethers';
 
-// ⚠️ KEEP YOUR LOGIC ⚠️
-const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "0x2ad63F61313aa0Df129EB222381042cf64cBCd7C";
-const RPC_URL = import.meta.env.VITE_RPC_URL || "https://rpc-amoy.polygon.technology/";
-
-const CONTRACT_ABI = [
-  "function getTotalDebates() external view returns (uint256)",
-  "function getLatestDebate() external view returns (tuple(uint256 id, uint256 timestamp, string symbol, string analystView, string skepticView, string degenView, string consensus, uint256 finalConfidence, address recorder))"
-];
-
-function App() {
-  const [debate, setDebate] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [activeAgent, setActiveAgent] = useState(null);
-  const [totalDebates, setTotalDebates] = useState(0);
-
-  // --- LOGIC SECTION (UNCHANGED) ---
-  const parseAgent = (viewStr, initial, name) => {
-    const [decision, confidence, reasoning] = viewStr.split('|');
-    return { initial, name, decision, confidence: parseInt(confidence), reasoning };
-  };
-
-  const fetchDebate = async () => {
-    try {
-      const provider = new ethers.JsonRpcProvider(RPC_URL);
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-      const total = await contract.getTotalDebates();
-      setTotalDebates(Number(total));
-
-      if (Number(total) > 0) {
-        const data = await contract.getLatestDebate();
-        const [decision, agreement, confidence] = data.consensus.split('|');
-        
-        setDebate({
-          id: Number(data.id),
-          symbol: data.symbol,
-          timestamp: new Date(Number(data.timestamp) * 1000),
-          consensus: { decision, agreement, confidence: parseInt(confidence) },
-          agents: [
-            parseAgent(data.analystView, 'A', 'Analyst'),
-            parseAgent(data.skepticView, 'S', 'Skeptic'),
-            parseAgent(data.degenView, 'D', 'Degen')
-          ]
-        });
-      }
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching debate:', error);
-      setLoading(false);
-    }
-  };
+const OldMoneyDashboard = () => {
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [activeDebate, setActiveDebate] = useState(null);
 
   useEffect(() => {
-    fetchDebate();
-    const interval = setInterval(fetchDebate, 10000);
-    return () => clearInterval(interval);
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
   }, []);
 
-  // --- THE NEW "LUXURY" DESIGN SYSTEM ---
+  // Mock data
+  const councilMembers = [
+    {
+      name: 'ANALYST',
+      latinTitle: 'Magister Rationis',
+      symbol: '◈',
+      decision: 'HOLD',
+      confidence: 50,
+      reasoning: 'Market showing consolidation pattern',
+      risk: 3
+    },
+    {
+      name: 'SKEPTIC', 
+      latinTitle: 'Custos Prudentiae',
+      symbol: '◆',
+      decision: 'HOLD',
+      confidence: 85,
+      reasoning: 'RSI 86 suggests potential overextension. Downside risk elevated; prudent to protect capital from correction.',
+      risk: 2
+    },
+    {
+      name: 'DEGEN',
+      latinTitle: 'Dux Fortunae', 
+      symbol: '◇',
+      decision: 'HOLD',
+      confidence: 50,
+      reasoning: 'Market showing consolidation pattern',
+      risk: 9
+    }
+  ];
 
-  // Helper to determine color based on decision
-  const getStatusColor = (decision) => {
-    if (decision === 'BUY') return 'text-copper border-copper/30';
-    if (decision === 'SELL') return 'text-alabaster border-alabaster/30';
-    return 'text-gold border-gold/30';
+  const recentSignal = {
+    asset: 'ETH',
+    decision: 'HOLD',
+    timestamp: '16 • POLYGON AMOY'
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-vantablack flex items-center justify-center">
-        <div className="animate-pulse-slow text-gold font-monument tracking-[0.3em] text-xl">
-          INITIALIZING LEDGER...
-        </div>
-      </div>
-    );
-  }
-
-  if (!debate) {
-    return (
-      <div className="min-h-screen bg-vantablack flex flex-col items-center justify-center text-center p-8">
-        <h1 className="text-gold font-monument text-4xl mb-4 tracking-widest">PANTHEON</h1>
-        <p className="text-alabaster font-editorial italic text-lg opacity-60 mb-8">The Council is silent.</p>
-        <div className="p-6 border border-gold/20 bg-obsidian max-w-md">
-          <p className="font-technical text-xs text-gold/60 mb-4">AWAITING GENESIS INPUT</p>
-          <code className="bg-black p-3 block text-left text-xs text-copper font-mono">
-            node backend/agent.js
-          </code>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-vantablack text-alabaster selection:bg-gold/20 selection:text-gold overflow-x-hidden">
-      
-      {/* 1. HEADER: The Digital Antiquity Vibe */}
-      <header className="text-center pt-20 pb-16 border-b border-gold/10 relative">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-20 bg-gradient-to-b from-transparent to-gold/30" />
-        <h1 className="font-monument text-5xl md:text-7xl font-black tracking-[0.2em] text-gold mb-4 drop-shadow-lg">
-          PANTHEON
-        </h1>
-        <p className="font-editorial italic text-xl text-alabaster/60 tracking-widest">
-          The Obsidian Ledger
-        </p>
-      </header>
+    <div style={{
+      minHeight: '100vh',
+      background: '#050505',
+      color: '#F0F0F0',
+      fontFamily: "'Space Mono', monospace",
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      {/* Subtle marble texture overlay */}
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.01) 2px, rgba(255,255,255,0.01) 4px)`,
+        pointerEvents: 'none',
+        zIndex: 1
+      }} />
 
-      <main className="max-w-7xl mx-auto px-6 py-16">
+      {/* Main Content */}
+      <div style={{
+        position: 'relative',
+        zIndex: 2,
+        maxWidth: '1400px',
+        margin: '0 auto',
+        padding: '3rem 2rem'
+      }}>
         
-        {/* 2. THE OCULUS (Replaces the "Clock") */}
-        <section className="mb-32 flex flex-col items-center">
-          <div className="relative w-64 h-64 flex items-center justify-center">
-            {/* Rotating Rings */}
-            <div className="absolute inset-0 border border-gold/10 rounded-full animate-[spin_10s_linear_infinite]" />
-            <div className="absolute inset-4 border border-copper/20 rounded-full animate-[spin_15s_linear_infinite_reverse]" />
-            <div className="absolute inset-12 border border-gold/30 rounded-full" />
-            
-            {/* Center Data */}
-            <div className="text-center z-10 backdrop-blur-sm p-4">
-              <div className="font-monument text-3xl text-alabaster tracking-tighter">
-                {debate.symbol}
+        {/* Elegant Header */}
+        <header style={{
+          borderBottom: '1px solid rgba(212, 175, 55, 0.15)',
+          paddingBottom: '2.618rem',
+          marginBottom: '3rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start'
+        }}>
+          <div>
+            <h1 style={{
+              fontFamily: "'Cinzel', serif",
+              fontSize: '3.5rem',
+              fontWeight: 900,
+              letterSpacing: '0.3em',
+              color: '#D4AF37',
+              margin: 0,
+              marginBottom: '0.5rem',
+              lineHeight: 1
+            }}>
+              PANTHEON
+            </h1>
+            <p style={{
+              fontFamily: "'Playfair Display', serif",
+              fontStyle: 'italic',
+              fontSize: '1.1rem',
+              color: '#C0C0C0',
+              letterSpacing: '0.15em',
+              margin: 0
+            }}>
+              The Obsidian Ledger
+            </p>
+          </div>
+
+          {/* Time & Network */}
+          <div style={{
+            textAlign: 'right',
+            fontFamily: "'Space Mono', monospace",
+            fontSize: '0.75rem',
+            color: '#808080',
+            letterSpacing: '0.1em'
+          }}>
+            <div style={{ marginBottom: '0.5rem' }}>
+              {currentTime.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: false 
+              })}
+            </div>
+            <div style={{
+              color: '#D4AF37',
+              fontSize: '0.7rem'
+            }}>
+              POLYGON • AMOY
+            </div>
+          </div>
+        </header>
+
+        {/* Asset & Decision Summary */}
+        <section style={{
+          background: 'rgba(10, 10, 10, 0.6)',
+          border: '1px solid rgba(212, 175, 55, 0.2)',
+          padding: '2rem',
+          marginBottom: '3rem',
+          position: 'relative'
+        }}>
+          {/* Corner ornaments */}
+          <div style={{
+            position: 'absolute',
+            top: '1rem',
+            left: '1rem',
+            width: '24px',
+            height: '24px',
+            borderTop: '2px solid rgba(212, 175, 55, 0.4)',
+            borderLeft: '2px solid rgba(212, 175, 55, 0.4)'
+          }} />
+          <div style={{
+            position: 'absolute',
+            top: '1rem',
+            right: '1rem',
+            width: '24px',
+            height: '24px',
+            borderTop: '2px solid rgba(212, 175, 55, 0.4)',
+            borderRight: '2px solid rgba(212, 175, 55, 0.4)'
+          }} />
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr auto 1fr',
+            gap: '2rem',
+            alignItems: 'center'
+          }}>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{
+                fontFamily: "'Cinzel', serif",
+                fontSize: '0.75rem',
+                letterSpacing: '0.2em',
+                color: '#808080',
+                marginBottom: '0.5rem'
+              }}>
+                INSTRUMENTUM
               </div>
-              <div className={`font-technical text-xs tracking-widest mt-2 ${getStatusColor(debate.consensus.decision).split(' ')[0]}`}>
-                {debate.consensus.decision} DETECTED
+              <div style={{
+                fontFamily: "'Cinzel', serif",
+                fontSize: '2rem',
+                fontWeight: 600,
+                letterSpacing: '0.15em',
+                color: '#D4AF37'
+              }}>
+                {recentSignal.asset}
+              </div>
+              <div style={{
+                fontFamily: "'Playfair Display', serif",
+                fontStyle: 'italic',
+                fontSize: '0.875rem',
+                color: '#A0A0A0',
+                marginTop: '0.25rem'
+              }}>
+                Detected
+              </div>
+            </div>
+
+            {/* Center ornament */}
+            <div style={{
+              fontSize: '2rem',
+              color: '#D4AF37',
+              opacity: 0.3
+            }}>
+              ◇
+            </div>
+
+            <div style={{ textAlign: 'right' }}>
+              <div style={{
+                fontFamily: "'Cinzel', serif",
+                fontSize: '0.75rem',
+                letterSpacing: '0.2em',
+                color: '#808080',
+                marginBottom: '0.5rem'
+              }}>
+                SENTENTIA
+              </div>
+              <div style={{
+                fontFamily: "'Cinzel', serif",
+                fontSize: '2rem',
+                fontWeight: 600,
+                letterSpacing: '0.15em',
+                color: '#8C7853'
+              }}>
+                {recentSignal.decision}
+              </div>
+              <div style={{
+                fontFamily: "'Playfair Display', serif",
+                fontStyle: 'italic',
+                fontSize: '0.875rem',
+                color: '#A0A0A0',
+                marginTop: '0.25rem'
+              }}>
+                Consensus Reached
               </div>
             </div>
           </div>
         </section>
 
-        {/* 3. CONSILIUM (The Council Cards) */}
-        <section className="mb-32">
-          <div className="flex items-center justify-center gap-4 mb-16">
-            <div className="h-px w-12 bg-gold/30" />
-            <h2 className="font-monument text-gold text-lg tracking-[0.3em]">CONSILIUM</h2>
-            <div className="h-px w-12 bg-gold/30" />
-          </div>
+        {/* Council Section */}
+        <section style={{ marginBottom: '3rem' }}>
+          <h2 style={{
+            fontFamily: "'Cinzel', serif",
+            fontSize: '1.5rem',
+            fontWeight: 600,
+            letterSpacing: '0.25em',
+            color: '#D4AF37',
+            textAlign: 'center',
+            marginBottom: '2rem',
+            textTransform: 'uppercase'
+          }}>
+            Consilium
+          </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {debate.agents.map((agent, i) => (
-              <div 
-                key={i}
-                onClick={() => setActiveAgent(activeAgent === i ? null : i)}
-                className={`group relative p-8 border transition-all duration-700 cursor-pointer bg-obsidian
-                  ${activeAgent === i ? 'border-gold/40 bg-obsidian/80' : 'border-white/5 hover:border-gold/20'}
-                `}
-              >
-                {/* Minimalist Header */}
-                <div className="flex justify-between items-start mb-6">
-                  <div className="font-editorial italic text-2xl text-alabaster">
-                    {agent.name}
-                  </div>
-                  <div className={`font-technical text-xs px-2 py-1 border ${getStatusColor(agent.decision)}`}>
-                    {agent.decision}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '1.5rem'
+          }}>
+            {councilMembers.map((member, idx) => (
+              <div key={idx} style={{
+                background: '#0A0A0A',
+                border: `1px solid rgba(212, 175, 55, 0.15)`,
+                padding: '2rem',
+                position: 'relative',
+                transition: 'border-color 0.4s ease'
+              }}>
+                {/* Corner decorations */}
+                <div style={{
+                  position: 'absolute',
+                  top: '0.75rem',
+                  left: '0.75rem',
+                  width: '16px',
+                  height: '16px',
+                  borderTop: '1px solid rgba(212, 175, 55, 0.3)',
+                  borderLeft: '1px solid rgba(212, 175, 55, 0.3)'
+                }} />
+                <div style={{
+                  position: 'absolute',
+                  top: '0.75rem',
+                  right: '0.75rem',
+                  width: '16px',
+                  height: '16px',
+                  borderTop: '1px solid rgba(212, 175, 55, 0.3)',
+                  borderRight: '1px solid rgba(212, 175, 55, 0.3)'
+                }} />
+                <div style={{
+                  position: 'absolute',
+                  bottom: '0.75rem',
+                  left: '0.75rem',
+                  width: '16px',
+                  height: '16px',
+                  borderBottom: '1px solid rgba(212, 175, 55, 0.3)',
+                  borderLeft: '1px solid rgba(212, 175, 55, 0.3)'
+                }} />
+                <div style={{
+                  position: 'absolute',
+                  bottom: '0.75rem',
+                  right: '0.75rem',
+                  width: '16px',
+                  height: '16px',
+                  borderBottom: '1px solid rgba(212, 175, 55, 0.3)',
+                  borderRight: '1px solid rgba(212, 175, 55, 0.3)'
+                }} />
+
+                {/* Symbol */}
+                <div style={{
+                  textAlign: 'center',
+                  fontSize: '2.5rem',
+                  color: '#D4AF37',
+                  marginBottom: '1rem',
+                  fontWeight: 300
+                }}>
+                  {member.symbol}
+                </div>
+
+                {/* Name */}
+                <div style={{
+                  fontFamily: "'Cinzel', serif",
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  letterSpacing: '0.2em',
+                  color: '#D4AF37',
+                  textAlign: 'center',
+                  marginBottom: '0.5rem'
+                }}>
+                  {member.name}
+                </div>
+
+                {/* Latin title */}
+                <div style={{
+                  fontFamily: "'Playfair Display', serif",
+                  fontStyle: 'italic',
+                  fontSize: '0.8rem',
+                  color: '#A0A0A0',
+                  textAlign: 'center',
+                  marginBottom: '1.5rem',
+                  paddingBottom: '1rem',
+                  borderBottom: '1px solid rgba(212, 175, 55, 0.1)'
+                }}>
+                  {member.latinTitle}
+                </div>
+
+                {/* Decision badge */}
+                <div style={{
+                  textAlign: 'center',
+                  marginBottom: '1rem'
+                }}>
+                  <div style={{
+                    display: 'inline-block',
+                    padding: '0.5rem 1.5rem',
+                    border: '1px solid #8C7853',
+                    background: 'rgba(140, 120, 83, 0.1)',
+                    fontFamily: "'Cinzel', serif",
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    letterSpacing: '0.2em',
+                    color: '#A89968'
+                  }}>
+                    {member.decision}
                   </div>
                 </div>
 
-                {/* Technical Stats */}
-                <div className="mb-6 space-y-2">
-                  <div className="flex justify-between items-end">
-                    <span className="font-technical text-[10px] text-alabaster/40 uppercase">Confidence</span>
-                    <span className="font-technical text-xl text-gold">{agent.confidence}%</span>
-                  </div>
-                  <div className="w-full h-px bg-white/10">
-                    <div 
-                      className="h-full bg-gold transition-all duration-1000" 
-                      style={{ width: `${agent.confidence}%` }} 
-                    />
-                  </div>
+                {/* Reasoning */}
+                <div style={{
+                  fontFamily: "'Playfair Display', serif",
+                  fontStyle: 'italic',
+                  fontSize: '0.8rem',
+                  lineHeight: '1.6',
+                  color: '#C0C0C0',
+                  textAlign: 'center',
+                  minHeight: '80px',
+                  marginBottom: '1rem',
+                  padding: '0 0.5rem'
+                }}>
+                  "{member.reasoning}"
                 </div>
 
-                {/* Reasoning (Collapsible) */}
-                <div className={`overflow-hidden transition-all duration-500 ${activeAgent === i ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'}`}>
-                  <p className="font-editorial text-sm leading-relaxed text-alabaster/80 border-t border-white/5 pt-4">
-                    "{agent.reasoning}"
-                  </p>
-                </div>
-
-                {/* Hover Reveal Indicator */}
-                {activeAgent !== i && (
-                  <div className="text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <span className="font-technical text-[10px] text-gold/50">+ READ ANALYSIS</span>
+                {/* Metrics */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '0.75rem',
+                  marginTop: '1rem'
+                }}>
+                  <div style={{
+                    background: 'rgba(16, 16, 16, 0.6)',
+                    border: '1px solid rgba(212, 175, 55, 0.1)',
+                    padding: '0.75rem',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{
+                      fontSize: '0.65rem',
+                      color: '#808080',
+                      letterSpacing: '0.1em',
+                      marginBottom: '0.25rem'
+                    }}>
+                      FIDUCIA
+                    </div>
+                    <div style={{
+                      fontFamily: "'Space Mono', monospace",
+                      fontSize: '1.1rem',
+                      fontWeight: 700,
+                      color: '#D4AF37'
+                    }}>
+                      {member.confidence}%
+                    </div>
                   </div>
-                )}
+
+                  <div style={{
+                    background: 'rgba(16, 16, 16, 0.6)',
+                    border: '1px solid rgba(212, 175, 55, 0.1)',
+                    padding: '0.75rem',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{
+                      fontSize: '0.65rem',
+                      color: '#808080',
+                      letterSpacing: '0.1em',
+                      marginBottom: '0.25rem'
+                    }}>
+                      PERICULUM
+                    </div>
+                    <div style={{
+                      fontFamily: "'Space Mono', monospace",
+                      fontSize: '1.1rem',
+                      fontWeight: 700,
+                      color: '#A89968'
+                    }}>
+                      {member.risk}/X
+                    </div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* 4. THE LEDGER (Verification) */}
-        <section className="border-t border-gold/10 pt-16">
-          <div className="flex flex-col md:flex-row justify-between items-end gap-6">
+        {/* Immutable Record */}
+        <section style={{
+          background: 'rgba(10, 10, 10, 0.8)',
+          border: '1px solid rgba(212, 175, 55, 0.2)',
+          padding: '2rem',
+          position: 'relative'
+        }}>
+          <h2 style={{
+            fontFamily: "'Cinzel', serif",
+            fontSize: '1.25rem',
+            fontWeight: 600,
+            letterSpacing: '0.25em',
+            color: '#D4AF37',
+            textAlign: 'center',
+            marginBottom: '1.5rem'
+          }}>
+            IMMUTABLE RECORD
+          </h2>
+
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '3rem',
+            fontFamily: "'Space Mono', monospace",
+            fontSize: '0.75rem',
+            color: '#C0C0C0'
+          }}>
             <div>
-              <h3 className="font-monument text-sm text-gold tracking-widest mb-2">IMMUTABLE RECORD</h3>
-              <p className="font-technical text-xs text-alabaster/40">
-                BLOCKCHAIN ID: #{debate.id} • POLYGON AMOY
-              </p>
+              <div style={{ color: '#808080', marginBottom: '0.5rem' }}>
+                BLOCKCHAIN ID
+              </div>
+              <div style={{ color: '#D4AF37' }}>
+                #16
+              </div>
             </div>
-            <a 
-              href={`https://amoy.polygonscan.com/address/${CONTRACT_ADDRESS}`}
+            <div style={{
+              width: '1px',
+              background: 'rgba(212, 175, 55, 0.2)'
+            }} />
+            <div>
+              <div style={{ color: '#808080', marginBottom: '0.5rem' }}>
+                NETWORK
+              </div>
+              <div>
+                POLYGON AMOY
+              </div>
+            </div>
+            <div style={{
+              width: '1px',
+              background: 'rgba(212, 175, 55, 0.2)'
+            }} />
+            <div>
+              <div style={{ color: '#808080', marginBottom: '0.5rem' }}>
+                STATUS
+              </div>
+              <div style={{ color: '#6B9A96' }}>
+                VERIFIED
+              </div>
+            </div>
+          </div>
+
+          <div style={{
+            marginTop: '1.5rem',
+            textAlign: 'center'
+          }}>
+            <a
+              href="https://amoy.polygonscan.com"
               target="_blank"
-              rel="noreferrer"
-              className="font-technical text-xs text-gold/60 hover:text-gold border-b border-transparent hover:border-gold transition-all pb-1"
+              rel="noopener noreferrer"
+              style={{
+                fontFamily: "'Cinzel', serif",
+                fontSize: '0.7rem',
+                letterSpacing: '0.15em',
+                color: '#D4AF37',
+                textDecoration: 'none',
+                border: '1px solid #D4AF37',
+                padding: '0.5rem 1.5rem',
+                display: 'inline-block',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#D4AF37';
+                e.target.style.color = '#050505';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'transparent';
+                e.target.style.color = '#D4AF37';
+              }}
             >
-              VIEW ON BLOCK EXPLORER ↗
+              INSPICE LIBRUM
             </a>
           </div>
         </section>
 
-      </main>
+        {/* Footer ornament */}
+        <div style={{
+          marginTop: '3rem',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            width: '120px',
+            height: '1px',
+            background: 'linear-gradient(to right, transparent, #D4AF37, transparent)',
+            margin: '0 auto',
+            opacity: 0.5
+          }} />
+        </div>
+      </div>
+
+      {/* Font imports */}
+      <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Space+Mono:wght@400;700&family=Cinzel:wght@400;600;900&display=swap"
+        rel="stylesheet"
+      />
     </div>
   );
-}
+};
 
-export default App;
+export default OldMoneyDashboard;
