@@ -18,21 +18,55 @@ Pantheon Pro revolutionizes algorithmic trading with a multi-agent AI system whe
 - **📊 Real-Time Dashboard**: Live updates every 10 seconds
 - **🎨 Beautiful UI**: Dark mode with glassmorphism effects
 
-## 🚀 Live Demo
+## 🚀 Live Deployment
 
-**Frontend:** https://pantheon-trading-xyz.vercel.app  
-**Smart Contract:** https://amoy.polygonscan.com/address/0x37DA722b13Bc9023084Cdc561bd41F9d73947fc086
+### Frontend
+**Live App:** https://pantheon-trading-xyz.vercel.app  
+**Deployed on:** Vercel
+
+### Backend
+**Live API:** https://pantheon-backend-hll6.onrender.com  
+**Deployed on:** Render
+
+#### API Endpoints
+
+- `GET /` - Health check & server status
+- `GET /api/debate/latest` - Get most recent debate
+- `GET /api/debate/count` - Get total debates recorded
+- `POST /api/debate/trigger` - Manually trigger a new debate
+
+#### Backend Features
+
+- ✅ **Auto-debate execution** every 30 minutes
+- ✅ **Three AI agents** (Analyst, Skeptic, Degen)
+- ✅ **Blockchain recording** on Polygon Amoy
+- ✅ **RESTful API** for frontend integration
+- ✅ **24/7 uptime** (with spin-down after 15 min inactivity)
+
+### Smart Contract
+**Contract Address:** `0x13713f5E8fbfD05E7B7DcA81E231D89D51D2ccB3`  
+**Network:** Polygon Amoy Testnet  
+**Explorer:** https://amoy.polygonscan.com/address/0x13713f5E8fbfD05E7B7DcA81E231D89D51D2ccB3
 
 ## 🏗️ Architecture
 ```
-Frontend (React + Vite)
+Frontend (React + Vite) → Vercel
     ↓
-Backend (Node.js + Express)
+Backend (Node.js + Express) → Render
     ↓
 Gemini AI (3 Agents)
     ↓
 Smart Contract (Polygon Amoy)
 ```
+
+## 🔄 Auto-Debate System
+
+The backend automatically triggers debates every 30 minutes:
+1. Fetches live ETH market data from CoinGecko
+2. Consults three AI agents independently
+3. Calculates democratic consensus
+4. Records entire debate on blockchain
+5. Viewable in real-time on frontend
 
 ## 🛠️ Tech Stack
 
