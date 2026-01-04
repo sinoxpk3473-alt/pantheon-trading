@@ -168,9 +168,8 @@ MIT License - see [LICENSE](LICENSE) file
 
 ---
 
-**Built with ❤️ for [Hackathon Name]**
+**Built with ❤️ **
 
 *Disclaimer: This is experimental software for educational purposes. Not financial advice.*
 ```
 
----
