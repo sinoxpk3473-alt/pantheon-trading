@@ -22,6 +22,7 @@ Pantheon Pro revolutionizes algorithmic trading with a multi-agent AI system whe
 
 ### Frontend
 **Live App:** https://pantheon-trading-bot.vercel.app
+
 **Deployed on:** Vercel
 
 ### Backend
