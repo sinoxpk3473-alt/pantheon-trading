@@ -34,8 +34,8 @@ const AnimatedDebate = ({ councilMembers, onComplete }) => {
       }
     };
 
-    runDebateSequence();
-  }, [councilMembers]);
+  runDebateSequence();
+}, []);
 
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 

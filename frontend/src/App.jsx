@@ -5,6 +5,7 @@ import AnimatedDebate from './components/AnimatedDebate';
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
 const RPC_URL = import.meta.env.VITE_RPC_URL;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const CONTRACT_ABI = [
   "function getTotalDebates() external view returns (uint256)",
@@ -35,30 +36,62 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const fetchLatestDebate = async () => {
-    try {
-      setIsThinking(true);
-      
-      const provider = new ethers.JsonRpcProvider(RPC_URL);
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-
-      const total = await contract.getTotalDebates();
-      setTotalDebates(Number(total));
-
-      if (Number(total) > 0) {
-        const debate = await contract.getLatestDebate();
-        parseDebate(debate);
-        setLastUpdate(new Date());
+// Alternative fetch method using backend API
+const fetchLatestDebate = async () => {
+  try {
+    setIsThinking(true);
+    
+    // Try backend API first (faster)
+    if (BACKEND_URL) {
+      try {
+        console.log('📡 Fetching from backend API...');
+        const response = await fetch(`${BACKEND_URL}/api/debate/latest`, {
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.success && data.debate) {
+            parseDebate(data.debate);
+            setLastUpdate(new Date());
+            setLoading(false);
+            setIsThinking(false);
+            console.log('✅ Data fetched from backend API');
+            return;
+          }
+        }
+      } catch (error) {
+        console.log('⚠️ Backend API unavailable, falling back to blockchain...');
       }
-      
-      setLoading(false);
-      setIsThinking(false);
-    } catch (error) {
-      console.error('Error fetching debate:', error);
-      setLoading(false);
-      setIsThinking(false);
     }
-  };
+    
+    // Fallback: Read directly from blockchain
+    console.log('⛓️ Fetching from blockchain...');
+    const provider = new ethers.JsonRpcProvider(RPC_URL);
+    const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+
+    const total = await contract.getTotalDebates();
+    setTotalDebates(Number(total));
+
+    if (Number(total) > 0) {
+      const debate = await contract.getLatestDebate();
+      parseDebate(debate);
+      setLastUpdate(new Date());
+    }
+    
+    setLoading(false);
+    setIsThinking(false);
+    console.log('✅ Data fetched from blockchain');
+    
+  } catch (error) {
+    console.error('Error fetching debate:', error);
+    setLoading(false);
+    setIsThinking(false);
+  }
+};
 
   const parseDebate = (debate) => {
     const parseView = (viewStr) => {
@@ -103,8 +136,10 @@ function App() {
     ]);
 
     setLatestDebate(debate);
-    setShowAnimation(true); // Reset animation for new debate
-  };
+  if (!latestDebate) {
+    setShowAnimation(true);
+  }
+};
 
   return (
     <div style={{
@@ -231,252 +266,259 @@ function App() {
           </div>
         )}
 
-        {/* Council Section with Animation */}
-        {!loading && councilMembers.length > 0 && (
-          <section style={{ marginBottom: '3rem' }}>
-            <h2 style={{
-              fontFamily: "'Cinzel', serif",
-              fontSize: '1.5rem',
-              fontWeight: 600,
-              letterSpacing: '0.25em',
-              color: '#D4AF37',
-              textAlign: 'center',
-              marginBottom: '2rem',
-              textTransform: 'uppercase'
-            }}>
-              Consilium
-            </h2>
+// Fixed Animation Section
+{/* Council Section with Animation */}
+{!loading && councilMembers.length > 0 && (
+  <section style={{ marginBottom: '3rem' }}>
+    <h2 style={{
+      fontFamily: "'Cinzel', serif",
+      fontSize: '1.5rem',
+      fontWeight: 600,
+      letterSpacing: '0.25em',
+      color: '#D4AF37',
+      textAlign: 'center',
+      marginBottom: '2rem',
+      textTransform: 'uppercase'
+    }}>
+      Consilium
+    </h2>
 
-            {/* Show Animation or Static Cards */}
-            {showAnimation ? (
-              <AnimatedDebate 
-                councilMembers={councilMembers}
-                onComplete={() => setShowAnimation(false)}
-              />
-            ) : (
-              // Static Council Member Cards
-              <div>
+    {/* Show Animation ONLY ONCE on mount or when manually triggered */}
+    {showAnimation && councilMembers.length > 0 ? (
+      <AnimatedDebate 
+        councilMembers={councilMembers}
+        onComplete={() => {
+          console.log('🎬 Animation complete, showing static cards');
+          setShowAnimation(false);
+        }}
+      />
+    ) : (
+      // Static Council Member Cards (shown after animation)
+      <div>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '1.5rem'
+        }}>
+          {councilMembers.map((member, idx) => (
+            <div
+              key={idx}
+              style={{
+                background: '#0A0A0A',
+                border: '1px solid rgba(212, 175, 55, 0.15)',
+                padding: '2rem',
+                position: 'relative',
+                transition: 'all 0.4s ease',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.5)';
+                e.currentTarget.style.boxShadow = '0 0 30px rgba(212, 175, 55, 0.15), inset 0 0 30px rgba(212, 175, 55, 0.05)';
+                e.currentTarget.style.transform = 'translateY(-4px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.15)';
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              {/* Corner decorations */}
+              <div style={{
+                position: 'absolute', top: '0.75rem', left: '0.75rem',
+                width: '16px', height: '16px',
+                borderTop: '1px solid rgba(212, 175, 55, 0.3)',
+                borderLeft: '1px solid rgba(212, 175, 55, 0.3)'
+              }} />
+              <div style={{
+                position: 'absolute', top: '0.75rem', right: '0.75rem',
+                width: '16px', height: '16px',
+                borderTop: '1px solid rgba(212, 175, 55, 0.3)',
+                borderRight: '1px solid rgba(212, 175, 55, 0.3)'
+              }} />
+              <div style={{
+                position: 'absolute', bottom: '0.75rem', left: '0.75rem',
+                width: '16px', height: '16px',
+                borderBottom: '1px solid rgba(212, 175, 55, 0.3)',
+                borderLeft: '1px solid rgba(212, 175, 55, 0.3)'
+              }} />
+              <div style={{
+                position: 'absolute', bottom: '0.75rem', right: '0.75rem',
+                width: '16px', height: '16px',
+                borderBottom: '1px solid rgba(212, 175, 55, 0.3)',
+                borderRight: '1px solid rgba(212, 175, 55, 0.3)'
+              }} />
+
+              {/* Symbol */}
+              <div style={{
+                textAlign: 'center',
+                fontSize: '2.5rem',
+                color: '#D4AF37',
+                marginBottom: '1rem',
+                fontWeight: 300
+              }}>
+                {member.symbol}
+              </div>
+
+              {/* Name */}
+              <div style={{
+                fontFamily: "'Cinzel', serif",
+                fontSize: '1rem',
+                fontWeight: 600,
+                letterSpacing: '0.2em',
+                color: '#D4AF37',
+                textAlign: 'center',
+                marginBottom: '0.5rem'
+              }}>
+                {member.name}
+              </div>
+
+              {/* Latin title */}
+              <div style={{
+                fontFamily: "'Playfair Display', serif",
+                fontStyle: 'italic',
+                fontSize: '0.8rem',
+                color: '#A0A0A0',
+                textAlign: 'center',
+                marginBottom: '1.5rem',
+                paddingBottom: '1rem',
+                borderBottom: '1px solid rgba(212, 175, 55, 0.1)'
+              }}>
+                {member.latinTitle}
+              </div>
+
+              {/* Decision badge */}
+              <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
                 <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: '1.5rem'
+                  display: 'inline-block',
+                  padding: '0.5rem 1.5rem',
+                  border: `1px solid ${
+                    member.decision === 'BUY' ? '#4B6E6A' :
+                    member.decision === 'SELL' ? '#C0C0C0' : '#8C7853'
+                  }`,
+                  background: `${
+                    member.decision === 'BUY' ? 'rgba(75, 110, 106, 0.1)' :
+                    member.decision === 'SELL' ? 'rgba(192, 192, 192, 0.1)' :
+                    'rgba(140, 120, 83, 0.1)'
+                  }`,
+                  fontFamily: "'Cinzel', serif",
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  letterSpacing: '0.2em',
+                  color: member.decision === 'BUY' ? '#6B9A96' :
+                         member.decision === 'SELL' ? '#D0D0D0' : '#A89968'
                 }}>
-                  {councilMembers.map((member, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        background: '#0A0A0A',
-                        border: '1px solid rgba(212, 175, 55, 0.15)',
-                        padding: '2rem',
-                        position: 'relative',
-                        transition: 'all 0.4s ease',
-                        cursor: 'pointer'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.5)';
-                        e.currentTarget.style.boxShadow = '0 0 30px rgba(212, 175, 55, 0.15), inset 0 0 30px rgba(212, 175, 55, 0.05)';
-                        e.currentTarget.style.transform = 'translateY(-4px)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.15)';
-                        e.currentTarget.style.boxShadow = 'none';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                      }}
-                    >
-                      {/* Corner decorations */}
-                      <div style={{
-                        position: 'absolute', top: '0.75rem', left: '0.75rem',
-                        width: '16px', height: '16px',
-                        borderTop: '1px solid rgba(212, 175, 55, 0.3)',
-                        borderLeft: '1px solid rgba(212, 175, 55, 0.3)'
-                      }} />
-                      <div style={{
-                        position: 'absolute', top: '0.75rem', right: '0.75rem',
-                        width: '16px', height: '16px',
-                        borderTop: '1px solid rgba(212, 175, 55, 0.3)',
-                        borderRight: '1px solid rgba(212, 175, 55, 0.3)'
-                      }} />
-                      <div style={{
-                        position: 'absolute', bottom: '0.75rem', left: '0.75rem',
-                        width: '16px', height: '16px',
-                        borderBottom: '1px solid rgba(212, 175, 55, 0.3)',
-                        borderLeft: '1px solid rgba(212, 175, 55, 0.3)'
-                      }} />
-                      <div style={{
-                        position: 'absolute', bottom: '0.75rem', right: '0.75rem',
-                        width: '16px', height: '16px',
-                        borderBottom: '1px solid rgba(212, 175, 55, 0.3)',
-                        borderRight: '1px solid rgba(212, 175, 55, 0.3)'
-                      }} />
-
-                      {/* Symbol */}
-                      <div style={{
-                        textAlign: 'center',
-                        fontSize: '2.5rem',
-                        color: '#D4AF37',
-                        marginBottom: '1rem',
-                        fontWeight: 300
-                      }}>
-                        {member.symbol}
-                      </div>
-
-                      {/* Name */}
-                      <div style={{
-                        fontFamily: "'Cinzel', serif",
-                        fontSize: '1rem',
-                        fontWeight: 600,
-                        letterSpacing: '0.2em',
-                        color: '#D4AF37',
-                        textAlign: 'center',
-                        marginBottom: '0.5rem'
-                      }}>
-                        {member.name}
-                      </div>
-
-                      {/* Latin title */}
-                      <div style={{
-                        fontFamily: "'Playfair Display', serif",
-                        fontStyle: 'italic',
-                        fontSize: '0.8rem',
-                        color: '#A0A0A0',
-                        textAlign: 'center',
-                        marginBottom: '1.5rem',
-                        paddingBottom: '1rem',
-                        borderBottom: '1px solid rgba(212, 175, 55, 0.1)'
-                      }}>
-                        {member.latinTitle}
-                      </div>
-
-                      {/* Decision badge */}
-                      <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-                        <div style={{
-                          display: 'inline-block',
-                          padding: '0.5rem 1.5rem',
-                          border: `1px solid ${
-                            member.decision === 'BUY' ? '#4B6E6A' :
-                            member.decision === 'SELL' ? '#C0C0C0' : '#8C7853'
-                          }`,
-                          background: `${
-                            member.decision === 'BUY' ? 'rgba(75, 110, 106, 0.1)' :
-                            member.decision === 'SELL' ? 'rgba(192, 192, 192, 0.1)' :
-                            'rgba(140, 120, 83, 0.1)'
-                          }`,
-                          fontFamily: "'Cinzel', serif",
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          letterSpacing: '0.2em',
-                          color: member.decision === 'BUY' ? '#6B9A96' :
-                                 member.decision === 'SELL' ? '#D0D0D0' : '#A89968'
-                        }}>
-                          {member.decision}
-                        </div>
-                      </div>
-
-                      {/* Reasoning */}
-                      <div style={{
-                        fontFamily: "'Playfair Display', serif",
-                        fontStyle: 'italic',
-                        fontSize: '0.8rem',
-                        lineHeight: '1.6',
-                        color: '#C0C0C0',
-                        textAlign: 'center',
-                        minHeight: '80px',
-                        marginBottom: '1rem',
-                        padding: '0 0.5rem'
-                      }}>
-                        "{member.reasoning}"
-                      </div>
-
-                      {/* Metrics */}
-                      <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: '1fr 1fr',
-                        gap: '0.75rem',
-                        marginTop: '1rem'
-                      }}>
-                        <div style={{
-                          background: 'rgba(16, 16, 16, 0.6)',
-                          border: '1px solid rgba(212, 175, 55, 0.1)',
-                          padding: '0.75rem',
-                          textAlign: 'center'
-                        }}>
-                          <div style={{
-                            fontSize: '0.65rem',
-                            color: '#808080',
-                            letterSpacing: '0.1em',
-                            marginBottom: '0.25rem'
-                          }}>
-                            FIDUCIA
-                          </div>
-                          <div style={{
-                            fontFamily: "'Space Mono', monospace",
-                            fontSize: '1.1rem',
-                            fontWeight: 700,
-                            color: '#D4AF37'
-                          }}>
-                            {member.confidence}%
-                          </div>
-                        </div>
-
-                        <div style={{
-                          background: 'rgba(16, 16, 16, 0.6)',
-                          border: '1px solid rgba(212, 175, 55, 0.1)',
-                          padding: '0.75rem',
-                          textAlign: 'center'
-                        }}>
-                          <div style={{
-                            fontSize: '0.65rem',
-                            color: '#808080',
-                            letterSpacing: '0.1em',
-                            marginBottom: '0.25rem'
-                          }}>
-                            PERICULUM
-                          </div>
-                          <div style={{
-                            fontFamily: "'Space Mono', monospace",
-                            fontSize: '1.1rem',
-                            fontWeight: 700,
-                            color: '#A89968'
-                          }}>
-                            {member.riskLevel}/X
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Replay Animation Button */}
-                <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-                  <button
-                    onClick={() => setShowAnimation(true)}
-                    style={{
-                      fontFamily: "'Cinzel', serif",
-                      fontSize: '0.7rem',
-                      letterSpacing: '0.15em',
-                      color: '#D4AF37',
-                      background: 'transparent',
-                      border: '1px solid #D4AF37',
-                      padding: '0.5rem 1.5rem',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.target.style.background = '#D4AF37';
-                      e.target.style.color = '#050505';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.background = 'transparent';
-                      e.target.style.color = '#D4AF37';
-                    }}
-                  >
-                    REPLAY DEBATE
-                  </button>
+                  {member.decision}
                 </div>
               </div>
-            )}
-          </section>
-        )}
+
+              {/* Reasoning */}
+              <div style={{
+                fontFamily: "'Playfair Display', serif",
+                fontStyle: 'italic',
+                fontSize: '0.8rem',
+                lineHeight: '1.6',
+                color: '#C0C0C0',
+                textAlign: 'center',
+                minHeight: '80px',
+                marginBottom: '1rem',
+                padding: '0 0.5rem'
+              }}>
+                "{member.reasoning}"
+              </div>
+
+              {/* Metrics */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '0.75rem',
+                marginTop: '1rem'
+              }}>
+                <div style={{
+                  background: 'rgba(16, 16, 16, 0.6)',
+                  border: '1px solid rgba(212, 175, 55, 0.1)',
+                  padding: '0.75rem',
+                  textAlign: 'center'
+                }}>
+                  <div style={{
+                    fontSize: '0.65rem',
+                    color: '#808080',
+                    letterSpacing: '0.1em',
+                    marginBottom: '0.25rem'
+                  }}>
+                    FIDUCIA
+                  </div>
+                  <div style={{
+                    fontFamily: "'Space Mono', monospace",
+                    fontSize: '1.1rem',
+                    fontWeight: 700,
+                    color: '#D4AF37'
+                  }}>
+                    {member.confidence}%
+                  </div>
+                </div>
+
+                <div style={{
+                  background: 'rgba(16, 16, 16, 0.6)',
+                  border: '1px solid rgba(212, 175, 55, 0.1)',
+                  padding: '0.75rem',
+                  textAlign: 'center'
+                }}>
+                  <div style={{
+                    fontSize: '0.65rem',
+                    color: '#808080',
+                    letterSpacing: '0.1em',
+                    marginBottom: '0.25rem'
+                  }}>
+                    PERICULUM
+                  </div>
+                  <div style={{
+                    fontFamily: "'Space Mono', monospace",
+                    fontSize: '1.1rem',
+                    fontWeight: 700,
+                    color: '#A89968'
+                  }}>
+                    {member.riskLevel}/X
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Replay Animation Button */}
+        <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+          <button
+            onClick={() => {
+              console.log('🔄 Replaying animation...');
+              setShowAnimation(true);
+            }}
+            style={{
+              fontFamily: "'Cinzel', serif",
+              fontSize: '0.7rem',
+              letterSpacing: '0.15em',
+              color: '#D4AF37',
+              background: 'transparent',
+              border: '1px solid #D4AF37',
+              padding: '0.5rem 1.5rem',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = '#D4AF37';
+              e.target.style.color = '#050505';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = 'transparent';
+              e.target.style.color = '#D4AF37';
+            }}
+          >
+            REPLAY DEBATE
+          </button>
+        </div>
+      </div>
+    )}
+  </section>
+)}
 
         {/* Immutable Record */}
         {!loading && (
