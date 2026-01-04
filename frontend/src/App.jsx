@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import Oculus from './components/Oculus';
-import AnimatedDebate from './components/AnimatedDebate';
+import './styles/circuit-board.css';
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
-const RPC_URL = import.meta.env.VITE_RPC_URL;
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || '0x13713f5E8fbfD05E7B7DcA81E231D89D51D2ccB3';
+const RPC_URL = import.meta.env.VITE_RPC_URL || 'https://rpc-amoy.polygon.technology';
 
 const CONTRACT_ABI = [
   "function getTotalDebates() external view returns (uint256)",
@@ -20,78 +19,43 @@ function App() {
   const [totalDebates, setTotalDebates] = useState(0);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
-  const [showAnimation, setShowAnimation] = useState(true);
 
-  // Update time every second
   useEffect(() => {
     setCurrentTime(new Date());
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch blockchain data
   useEffect(() => {
     fetchLatestDebate();
     const interval = setInterval(fetchLatestDebate, 10000);
     return () => clearInterval(interval);
   }, []);
 
-// Alternative fetch method using backend API
-const fetchLatestDebate = async () => {
-  try {
-    setIsThinking(true);
-    
-    // Try backend API first (faster)
-    if (BACKEND_URL) {
-      try {
-        console.log('📡 Fetching from backend API...');
-        const response = await fetch(`${BACKEND_URL}/api/debate/latest`, {
-          headers: {
-            'Accept': 'application/json'
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          
-          if (data.success && data.debate) {
-            parseDebate(data.debate);
-            setLastUpdate(new Date());
-            setLoading(false);
-            setIsThinking(false);
-            console.log('✅ Data fetched from backend API');
-            return;
-          }
-        }
-      } catch (error) {
-        console.log('⚠️ Backend API unavailable, falling back to blockchain...');
+  const fetchLatestDebate = async () => {
+    try {
+      setIsThinking(true);
+      
+      const provider = new ethers.JsonRpcProvider(RPC_URL);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+
+      const total = await contract.getTotalDebates();
+      setTotalDebates(Number(total));
+
+      if (Number(total) > 0) {
+        const debate = await contract.getLatestDebate();
+        parseDebate(debate);
+        setLastUpdate(new Date());
       }
+      
+      setLoading(false);
+      setIsThinking(false);
+    } catch (error) {
+      console.error('Error fetching debate:', error);
+      setLoading(false);
+      setIsThinking(false);
     }
-    
-    // Fallback: Read directly from blockchain
-    console.log('⛓️ Fetching from blockchain...');
-    const provider = new ethers.JsonRpcProvider(RPC_URL);
-    const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-
-    const total = await contract.getTotalDebates();
-    setTotalDebates(Number(total));
-
-    if (Number(total) > 0) {
-      const debate = await contract.getLatestDebate();
-      parseDebate(debate);
-      setLastUpdate(new Date());
-    }
-    
-    setLoading(false);
-    setIsThinking(false);
-    console.log('✅ Data fetched from blockchain');
-    
-  } catch (error) {
-    console.error('Error fetching debate:', error);
-    setLoading(false);
-    setIsThinking(false);
-  }
-};
+  };
 
   const parseDebate = (debate) => {
     const parseView = (viewStr) => {
@@ -114,7 +78,6 @@ const fetchLatestDebate = async () => {
         name: 'ANALYST',
         latinTitle: 'Magister Rationis',
         symbol: '◈',
-        description: 'Guardian of Logic and Empirical Truth',
         ...analyst
       },
       {
@@ -122,7 +85,6 @@ const fetchLatestDebate = async () => {
         name: 'SKEPTIC',
         latinTitle: 'Custos Prudentiae',
         symbol: '◆',
-        description: 'Protector Against Folly and Excess',
         ...skeptic
       },
       {
@@ -130,34 +92,25 @@ const fetchLatestDebate = async () => {
         name: 'DEGEN',
         latinTitle: 'Dux Fortunae',
         symbol: '◇',
-        description: 'Champion of Bold Ventures',
         ...degen
       }
     ]);
 
     setLatestDebate(debate);
-  if (!latestDebate) {
-    setShowAnimation(true);
-  }
-};
+  };
 
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#050505',
+      background: '#000000',
       color: '#F0F0F0',
       fontFamily: "'Space Mono', monospace",
       position: 'relative',
       overflow: 'hidden'
     }}>
-      {/* Marble texture overlay */}
-      <div style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.01) 2px, rgba(255,255,255,0.01) 4px)`,
-        pointerEvents: 'none',
-        zIndex: 1
-      }} />
+      {/* Circuit Board Background Layers */}
+      <div className="circuit-background" />
+      <div className="circuit-lines" />
 
       {/* Main Content */}
       <div style={{
@@ -168,9 +121,9 @@ const fetchLatestDebate = async () => {
         padding: '3rem 2rem'
       }}>
         
-        {/* Header */}
-        <header style={{
-          borderBottom: '1px solid rgba(212, 175, 55, 0.15)',
+        {/* Ornate Header */}
+        <header className="ornate-header" style={{
+          borderBottom: '2px solid rgba(212, 175, 55, 0.3)',
           paddingBottom: '2.618rem',
           marginBottom: '3rem',
           display: 'flex',
@@ -178,15 +131,15 @@ const fetchLatestDebate = async () => {
           alignItems: 'flex-start'
         }}>
           <div>
-            <h1 style={{
+            <h1 className="text-gold-gradient" style={{
               fontFamily: "'Cinzel', serif",
               fontSize: '3.5rem',
               fontWeight: 900,
               letterSpacing: '0.3em',
-              color: '#D4AF37',
               margin: 0,
               marginBottom: '0.5rem',
-              lineHeight: 1
+              lineHeight: 1,
+              textShadow: '0 0 20px rgba(212, 175, 55, 0.5)'
             }}>
               PANTHEON
             </h1>
@@ -202,7 +155,6 @@ const fetchLatestDebate = async () => {
             </p>
           </div>
 
-          {/* Time & Network */}
           <div style={{
             textAlign: 'right',
             fontFamily: "'Space Mono', monospace",
@@ -211,16 +163,12 @@ const fetchLatestDebate = async () => {
             letterSpacing: '0.1em'
           }}>
             <div style={{ marginBottom: '0.5rem', minWidth: '80px' }}>
-              {currentTime ? (
-                currentTime.toLocaleTimeString('en-US', { 
-                  hour: '2-digit', 
-                  minute: '2-digit',
-                  second: '2-digit',
-                  hour12: false 
-                })
-              ) : (
-                <span style={{ color: '#606060', fontStyle: 'italic' }}>--:--:--</span>
-              )}
+              {currentTime ? currentTime.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false 
+              }) : '--:--:--'}
             </div>
             <div style={{ color: '#D4AF37', fontSize: '0.7rem' }}>
               POLYGON • AMOY
@@ -250,8 +198,7 @@ const fetchLatestDebate = async () => {
             <div style={{
               marginBottom: '1rem',
               fontSize: '2rem',
-              color: '#D4AF37',
-              animation: 'pulse 2s ease-in-out infinite'
+              color: '#D4AF37'
             }}>
               ◇
             </div>
@@ -259,272 +206,180 @@ const fetchLatestDebate = async () => {
           </div>
         )}
 
-        {/* Oculus */}
+        {/* Oculus with Circuit Glow */}
         {!loading && latestDebate && (
-          <div style={{ marginBottom: '3rem' }}>
+          <div className="circuit-glow" style={{ marginBottom: '3rem' }}>
             <Oculus isThinking={isThinking} status="vigilant" />
           </div>
         )}
 
-// Fixed Animation Section
-{/* Council Section with Animation */}
-{!loading && councilMembers.length > 0 && (
-  <section style={{ marginBottom: '3rem' }}>
-    <h2 style={{
-      fontFamily: "'Cinzel', serif",
-      fontSize: '1.5rem',
-      fontWeight: 600,
-      letterSpacing: '0.25em',
-      color: '#D4AF37',
-      textAlign: 'center',
-      marginBottom: '2rem',
-      textTransform: 'uppercase'
-    }}>
-      Consilium
-    </h2>
-
-    {/* Show Animation ONLY ONCE on mount or when manually triggered */}
-    {showAnimation && councilMembers.length > 0 ? (
-      <AnimatedDebate 
-        councilMembers={councilMembers}
-        onComplete={() => {
-          console.log('🎬 Animation complete, showing static cards');
-          setShowAnimation(false);
-        }}
-      />
-    ) : (
-      // Static Council Member Cards (shown after animation)
-      <div>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '1.5rem'
-        }}>
-          {councilMembers.map((member, idx) => (
-            <div
-              key={idx}
-              style={{
-                background: '#0A0A0A',
-                border: '1px solid rgba(212, 175, 55, 0.15)',
-                padding: '2rem',
-                position: 'relative',
-                transition: 'all 0.4s ease',
-                cursor: 'pointer'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.5)';
-                e.currentTarget.style.boxShadow = '0 0 30px rgba(212, 175, 55, 0.15), inset 0 0 30px rgba(212, 175, 55, 0.05)';
-                e.currentTarget.style.transform = 'translateY(-4px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.15)';
-                e.currentTarget.style.boxShadow = 'none';
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
-            >
-              {/* Corner decorations */}
-              <div style={{
-                position: 'absolute', top: '0.75rem', left: '0.75rem',
-                width: '16px', height: '16px',
-                borderTop: '1px solid rgba(212, 175, 55, 0.3)',
-                borderLeft: '1px solid rgba(212, 175, 55, 0.3)'
-              }} />
-              <div style={{
-                position: 'absolute', top: '0.75rem', right: '0.75rem',
-                width: '16px', height: '16px',
-                borderTop: '1px solid rgba(212, 175, 55, 0.3)',
-                borderRight: '1px solid rgba(212, 175, 55, 0.3)'
-              }} />
-              <div style={{
-                position: 'absolute', bottom: '0.75rem', left: '0.75rem',
-                width: '16px', height: '16px',
-                borderBottom: '1px solid rgba(212, 175, 55, 0.3)',
-                borderLeft: '1px solid rgba(212, 175, 55, 0.3)'
-              }} />
-              <div style={{
-                position: 'absolute', bottom: '0.75rem', right: '0.75rem',
-                width: '16px', height: '16px',
-                borderBottom: '1px solid rgba(212, 175, 55, 0.3)',
-                borderRight: '1px solid rgba(212, 175, 55, 0.3)'
-              }} />
-
-              {/* Symbol */}
-              <div style={{
-                textAlign: 'center',
-                fontSize: '2.5rem',
-                color: '#D4AF37',
-                marginBottom: '1rem',
-                fontWeight: 300
-              }}>
-                {member.symbol}
-              </div>
-
-              {/* Name */}
-              <div style={{
-                fontFamily: "'Cinzel', serif",
-                fontSize: '1rem',
-                fontWeight: 600,
-                letterSpacing: '0.2em',
-                color: '#D4AF37',
-                textAlign: 'center',
-                marginBottom: '0.5rem'
-              }}>
-                {member.name}
-              </div>
-
-              {/* Latin title */}
-              <div style={{
-                fontFamily: "'Playfair Display', serif",
-                fontStyle: 'italic',
-                fontSize: '0.8rem',
-                color: '#A0A0A0',
-                textAlign: 'center',
-                marginBottom: '1.5rem',
-                paddingBottom: '1rem',
-                borderBottom: '1px solid rgba(212, 175, 55, 0.1)'
-              }}>
-                {member.latinTitle}
-              </div>
-
-              {/* Decision badge */}
-              <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-                <div style={{
-                  display: 'inline-block',
-                  padding: '0.5rem 1.5rem',
-                  border: `1px solid ${
-                    member.decision === 'BUY' ? '#4B6E6A' :
-                    member.decision === 'SELL' ? '#C0C0C0' : '#8C7853'
-                  }`,
-                  background: `${
-                    member.decision === 'BUY' ? 'rgba(75, 110, 106, 0.1)' :
-                    member.decision === 'SELL' ? 'rgba(192, 192, 192, 0.1)' :
-                    'rgba(140, 120, 83, 0.1)'
-                  }`,
-                  fontFamily: "'Cinzel', serif",
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  letterSpacing: '0.2em',
-                  color: member.decision === 'BUY' ? '#6B9A96' :
-                         member.decision === 'SELL' ? '#D0D0D0' : '#A89968'
-                }}>
-                  {member.decision}
-                </div>
-              </div>
-
-              {/* Reasoning */}
-              <div style={{
-                fontFamily: "'Playfair Display', serif",
-                fontStyle: 'italic',
-                fontSize: '0.8rem',
-                lineHeight: '1.6',
-                color: '#C0C0C0',
-                textAlign: 'center',
-                minHeight: '80px',
-                marginBottom: '1rem',
-                padding: '0 0.5rem'
-              }}>
-                "{member.reasoning}"
-              </div>
-
-              {/* Metrics */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '0.75rem',
-                marginTop: '1rem'
-              }}>
-                <div style={{
-                  background: 'rgba(16, 16, 16, 0.6)',
-                  border: '1px solid rgba(212, 175, 55, 0.1)',
-                  padding: '0.75rem',
-                  textAlign: 'center'
-                }}>
-                  <div style={{
-                    fontSize: '0.65rem',
-                    color: '#808080',
-                    letterSpacing: '0.1em',
-                    marginBottom: '0.25rem'
-                  }}>
-                    FIDUCIA
-                  </div>
-                  <div style={{
-                    fontFamily: "'Space Mono', monospace",
-                    fontSize: '1.1rem',
-                    fontWeight: 700,
-                    color: '#D4AF37'
-                  }}>
-                    {member.confidence}%
-                  </div>
-                </div>
-
-                <div style={{
-                  background: 'rgba(16, 16, 16, 0.6)',
-                  border: '1px solid rgba(212, 175, 55, 0.1)',
-                  padding: '0.75rem',
-                  textAlign: 'center'
-                }}>
-                  <div style={{
-                    fontSize: '0.65rem',
-                    color: '#808080',
-                    letterSpacing: '0.1em',
-                    marginBottom: '0.25rem'
-                  }}>
-                    PERICULUM
-                  </div>
-                  <div style={{
-                    fontFamily: "'Space Mono', monospace",
-                    fontSize: '1.1rem',
-                    fontWeight: 700,
-                    color: '#A89968'
-                  }}>
-                    {member.riskLevel}/X
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Replay Animation Button */}
-        <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-          <button
-            onClick={() => {
-              console.log('🔄 Replaying animation...');
-              setShowAnimation(true);
-            }}
-            style={{
+        {/* Council Section */}
+        {!loading && councilMembers.length > 0 && (
+          <section style={{ marginBottom: '3rem' }} className="fade-in-up">
+            <h2 style={{
               fontFamily: "'Cinzel', serif",
-              fontSize: '0.7rem',
-              letterSpacing: '0.15em',
+              fontSize: '1.5rem',
+              fontWeight: 600,
+              letterSpacing: '0.25em',
               color: '#D4AF37',
-              background: 'transparent',
-              border: '1px solid #D4AF37',
-              padding: '0.5rem 1.5rem',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.background = '#D4AF37';
-              e.target.style.color = '#050505';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = 'transparent';
-              e.target.style.color = '#D4AF37';
-            }}
-          >
-            REPLAY DEBATE
-          </button>
-        </div>
-      </div>
-    )}
-  </section>
-)}
+              textAlign: 'center',
+              marginBottom: '2rem',
+              textTransform: 'uppercase',
+              textShadow: '0 0 10px rgba(212, 175, 55, 0.3)'
+            }}>
+              CONSILIUM
+            </h2>
 
-        {/* Immutable Record */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '1.5rem'
+            }}>
+              {councilMembers.map((member, idx) => (
+                <div
+                  key={idx}
+                  className="metallic-card hover-glow"
+                  style={{
+                    padding: '2rem',
+                    position: 'relative'
+                  }}
+                >
+                  {/* Corner Ornaments */}
+                  <div className="corner-ornament corner-ornament-tl" />
+                  <div className="corner-ornament corner-ornament-tr" />
+                  <div className="corner-ornament corner-ornament-bl" />
+                  <div className="corner-ornament corner-ornament-br" />
+
+                  {/* Circuit Nodes */}
+                  <div className="circuit-node" style={{ top: '10px', left: '10px' }} />
+                  <div className="circuit-node" style={{ top: '10px', right: '10px' }} />
+                  <div className="circuit-node" style={{ bottom: '10px', left: '10px' }} />
+                  <div className="circuit-node" style={{ bottom: '10px', right: '10px' }} />
+
+                  {/* Symbol */}
+                  <div style={{
+                    textAlign: 'center',
+                    fontSize: '2.5rem',
+                    color: '#D4AF37',
+                    marginBottom: '1rem',
+                    fontWeight: 300,
+                    textShadow: '0 0 15px rgba(212, 175, 55, 0.6)'
+                  }}>
+                    {member.symbol}
+                  </div>
+
+                  {/* Name */}
+                  <div style={{
+                    fontFamily: "'Cinzel', serif",
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    letterSpacing: '0.2em',
+                    color: '#D4AF37',
+                    textAlign: 'center',
+                    marginBottom: '0.5rem'
+                  }}>
+                    {member.name}
+                  </div>
+
+                  {/* Latin title */}
+                  <div style={{
+                    fontFamily: "'Playfair Display', serif",
+                    fontStyle: 'italic',
+                    fontSize: '0.8rem',
+                    color: '#A0A0A0',
+                    textAlign: 'center',
+                    marginBottom: '1.5rem',
+                    paddingBottom: '1rem',
+                    borderBottom: '1px solid rgba(212, 175, 55, 0.2)'
+                  }}>
+                    {member.latinTitle}
+                  </div>
+
+                  {/* Decision Badge */}
+                  <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+                    <div className={`decision-badge decision-badge-${member.decision.toLowerCase()}`}>
+                      <span style={{
+                        fontFamily: "'Cinzel', serif",
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        letterSpacing: '0.2em',
+                        color: member.decision === 'BUY' ? '#6B9A96' :
+                               member.decision === 'SELL' ? '#D0D0D0' : '#A89968'
+                      }}>
+                        {member.decision}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Reasoning */}
+                  <div style={{
+                    fontFamily: "'Playfair Display', serif",
+                    fontStyle: 'italic',
+                    fontSize: '0.8rem',
+                    lineHeight: '1.6',
+                    color: '#C0C0C0',
+                    textAlign: 'center',
+                    minHeight: '80px',
+                    marginBottom: '1rem',
+                    padding: '0 0.5rem'
+                  }}>
+                    "{member.reasoning}"
+                  </div>
+
+                  {/* Metrics */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '0.75rem',
+                    marginTop: '1rem'
+                  }}>
+                    <div className="metric-box" style={{ padding: '0.75rem', textAlign: 'center' }}>
+                      <div style={{
+                        fontSize: '0.65rem',
+                        color: '#808080',
+                        letterSpacing: '0.1em',
+                        marginBottom: '0.25rem'
+                      }}>
+                        FIDUCIA
+                      </div>
+                      <div style={{
+                        fontFamily: "'Space Mono', monospace",
+                        fontSize: '1.1rem',
+                        fontWeight: 700,
+                        color: '#D4AF37'
+                      }}>
+                        {member.confidence}%
+                      </div>
+                    </div>
+
+                    <div className="metric-box" style={{ padding: '0.75rem', textAlign: 'center' }}>
+                      <div style={{
+                        fontSize: '0.65rem',
+                        color: '#808080',
+                        letterSpacing: '0.1em',
+                        marginBottom: '0.25rem'
+                      }}>
+                        PERICULUM
+                      </div>
+                      <div style={{
+                        fontFamily: "'Space Mono', monospace",
+                        fontSize: '1.1rem',
+                        fontWeight: 700,
+                        color: '#A89968'
+                      }}>
+                        {member.riskLevel}/X
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Immutable Record (Baroque Panel) */}
         {!loading && (
-          <section style={{
-            background: 'rgba(10, 10, 10, 0.8)',
-            border: '1px solid rgba(212, 175, 55, 0.2)',
+          <section className="baroque-panel fade-in-up" style={{
             padding: '2rem',
             position: 'relative'
           }}>
@@ -535,7 +390,8 @@ const fetchLatestDebate = async () => {
               letterSpacing: '0.25em',
               color: '#D4AF37',
               textAlign: 'center',
-              marginBottom: '1.5rem'
+              marginBottom: '1.5rem',
+              textShadow: '0 0 10px rgba(212, 175, 55, 0.3)'
             }}>
               IMMUTABLE RECORD
             </h2>
@@ -543,23 +399,24 @@ const fetchLatestDebate = async () => {
             <div style={{
               display: 'flex',
               justifyContent: 'center',
+              alignItems: 'center',
               gap: '3rem',
               fontFamily: "'Space Mono', monospace",
               fontSize: '0.75rem',
-              color: '#C0C0C0'
+              color: '#C0C0C0',
+              marginBottom: '1.5rem'
             }}>
               <div>
                 <div style={{ color: '#808080', marginBottom: '0.5rem' }}>
                   BLOCKCHAIN ID
                 </div>
-                <div style={{ color: '#D4AF37' }}>
+                <div style={{ color: '#D4AF37', fontSize: '1.2rem', fontWeight: 700 }}>
                   #{totalDebates}
                 </div>
               </div>
-              <div style={{
-                width: '1px',
-                background: 'rgba(212, 175, 55, 0.2)'
-              }} />
+              
+              <div style={{ width: '2px', height: '40px', background: 'linear-gradient(180deg, transparent, rgba(212, 175, 55, 0.4), transparent)' }} />
+              
               <div>
                 <div style={{ color: '#808080', marginBottom: '0.5rem' }}>
                   CONTRACT
@@ -568,50 +425,30 @@ const fetchLatestDebate = async () => {
                   {CONTRACT_ADDRESS?.slice(0, 10)}...
                 </div>
               </div>
-              <div style={{
-                width: '1px',
-                background: 'rgba(212, 175, 55, 0.2)'
-              }} />
-              <div>
-                <div style={{ color: '#808080', marginBottom: '0.5rem' }}>
-                  STATUS
-                </div>
-                <div style={{ color: '#6B9A96' }}>
-                  VERIFIED
+              
+              <div style={{ width: '2px', height: '40px', background: 'linear-gradient(180deg, transparent, rgba(212, 175, 55, 0.4), transparent)' }} />
+              
+              <div style={{ position: 'relative' }}>
+                <div className="verified-seal">
+                  <span style={{ 
+                    fontFamily: "'Cinzel', serif",
+                    fontSize: '0.7rem',
+                    fontWeight: 700,
+                    color: '#D4AF37'
+                  }}>
+                    ✓
+                  </span>
                 </div>
               </div>
             </div>
 
-            <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-              <a
-                href={`https://amoy.polygonscan.com/address/${CONTRACT_ADDRESS}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  fontFamily: "'Cinzel', serif",
-                  fontSize: '0.7rem',
-                  letterSpacing: '0.15em',
-                  color: '#D4AF37',
-                  textDecoration: 'none',
-                  border: '1px solid #D4AF37',
-                  padding: '0.5rem 1.5rem',
-                  display: 'inline-block',
-                  transition: 'all 0.3s ease',
-                  background: 'transparent'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = '#D4AF37';
-                  e.target.style.color = '#050505';
-                  e.target.style.boxShadow = '0 0 20px rgba(212, 175, 55, 0.4)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = 'transparent';
-                  e.target.style.color = '#D4AF37';
-                  e.target.style.boxShadow = 'none';
-                }}
+            <div style={{ textAlign: 'center' }}>
+              <button
+                className="gold-button"
+                onClick={() => window.open(`https://amoy.polygonscan.com/address/${CONTRACT_ADDRESS}`, '_blank')}
               >
-                INSPICE LIBRUM
-              </a>
+                <span>INSPICE LIBRUM</span>
+              </button>
             </div>
           </section>
         )}
@@ -622,14 +459,6 @@ const fetchLatestDebate = async () => {
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Space+Mono:wght@400;700&family=Cinzel:wght@400;600;900&display=swap"
         rel="stylesheet"
       />
-
-      {/* CSS Animation */}
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 0.4; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.1); }
-        }
-      `}</style>
     </div>
   );
 }
