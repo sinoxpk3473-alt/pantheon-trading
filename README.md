@@ -1,4 +1,4 @@
-# 🏛️ PANTHEON PRO - Multi-Agent AI Trading Council
+# 🏛️ PANTHEON - Multi-Agent AI Trading Council
 
 > **Where Three AI Minds Trade Better Than One**
 
@@ -8,7 +8,7 @@
 
 ## 🎯 Overview
 
-Pantheon Pro revolutionizes algorithmic trading with a multi-agent AI system where three distinct personalities debate every market move before reaching consensus. Every decision is permanently recorded on the Polygon blockchain for complete transparency.
+Pantheon revolutionizes algorithmic trading with a multi-agent AI system where three distinct personalities debate every market move before reaching consensus. Every decision is permanently recorded on the Polygon blockchain for complete transparency.
 
 ## ✨ Key Features
 
