@@ -1,0 +1,453 @@
+/* ============================================
+   PANTHEON PRO - CIRCUIT BOARD GOLD THEME
+   Advanced Implementation
+   ============================================ */
+
+/* Circuit Board Background */
+.circuit-background {
+  position: fixed;
+  inset: 0;
+  background: 
+    linear-gradient(90deg, rgba(30, 30, 30, 0.05) 1px, transparent 1px),
+    linear-gradient(rgba(30, 30, 30, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+  z-index: 0;
+}
+
+.circuit-background::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 20% 50%, rgba(212, 175, 55, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 50%, rgba(212, 175, 55, 0.03) 0%, transparent 50%);
+  animation: none; /* NO LOOPING */
+}
+
+/* Circuit Lines (Static) */
+.circuit-lines {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(90deg, transparent 0%, transparent 48%, rgba(212, 175, 55, 0.1) 49%, rgba(212, 175, 55, 0.1) 51%, transparent 52%, transparent 100%),
+    linear-gradient(0deg, transparent 0%, transparent 48%, rgba(212, 175, 55, 0.1) 49%, rgba(212, 175, 55, 0.1) 51%, transparent 52%, transparent 100%);
+  background-size: 100px 100px;
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Metallic Gold Card */
+.metallic-card {
+  background: linear-gradient(135deg, 
+    rgba(20, 20, 20, 0.95) 0%,
+    rgba(30, 30, 30, 0.95) 50%,
+    rgba(20, 20, 20, 0.95) 100%
+  );
+  border: 2px solid;
+  border-image: linear-gradient(135deg, 
+    rgba(212, 175, 55, 0.4) 0%, 
+    rgba(255, 215, 0, 0.6) 50%, 
+    rgba(212, 175, 55, 0.4) 100%
+  ) 1;
+  box-shadow: 
+    0 0 20px rgba(212, 175, 55, 0.2),
+    inset 0 1px 0 rgba(255, 215, 0, 0.1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.metallic-card::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(135deg, 
+    transparent 0%, 
+    rgba(212, 175, 55, 0.1) 50%, 
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.metallic-card:hover::before {
+  opacity: 1;
+}
+
+/* Corner Decorations (Enhanced) */
+.corner-ornament {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.6) 0%, transparent 100%);
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+
+.corner-ornament-tl {
+  top: 0;
+  left: 0;
+  transform: rotate(0deg);
+}
+
+.corner-ornament-tr {
+  top: 0;
+  right: 0;
+  transform: rotate(90deg);
+}
+
+.corner-ornament-bl {
+  bottom: 0;
+  left: 0;
+  transform: rotate(-90deg);
+}
+
+.corner-ornament-br {
+  bottom: 0;
+  right: 0;
+  transform: rotate(180deg);
+}
+
+/* Circuit Node Decoration */
+.circuit-node {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, 
+    rgba(212, 175, 55, 1) 0%, 
+    rgba(212, 175, 55, 0.4) 50%, 
+    transparent 100%
+  );
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.8);
+}
+
+/* Gold Button Style */
+.gold-button {
+  background: linear-gradient(135deg, 
+    rgba(212, 175, 55, 0.15) 0%, 
+    rgba(212, 175, 55, 0.25) 50%, 
+    rgba(212, 175, 55, 0.15) 100%
+  );
+  border: 2px solid rgba(212, 175, 55, 0.6);
+  color: #D4AF37;
+  font-family: 'Cinzel', serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  padding: 0.75rem 2rem;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 4px 15px rgba(212, 175, 55, 0.2),
+    inset 0 1px 0 rgba(255, 215, 0, 0.2);
+}
+
+.gold-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform: translate(-50%, -50%);
+  background: rgba(212, 175, 55, 0.3);
+  border-radius: 50%;
+  transition: width 0.6s ease, height 0.6s ease;
+}
+
+.gold-button:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.gold-button:hover {
+  border-color: rgba(255, 215, 0, 0.8);
+  box-shadow: 
+    0 6px 25px rgba(212, 175, 55, 0.4),
+    inset 0 1px 0 rgba(255, 215, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+.gold-button span {
+  position: relative;
+  z-index: 1;
+}
+
+/* ETH Coin (3D Metallic) */
+.eth-coin-container {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+}
+
+.eth-coin {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, 
+    rgba(212, 175, 55, 0.3) 0%, 
+    rgba(255, 215, 0, 0.5) 50%, 
+    rgba(212, 175, 55, 0.3) 100%
+  );
+  border-radius: 50%;
+  border: 3px solid rgba(212, 175, 55, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 
+    0 10px 40px rgba(212, 175, 55, 0.3),
+    inset 0 -5px 20px rgba(0, 0, 0, 0.3),
+    inset 0 5px 20px rgba(255, 215, 0, 0.2);
+}
+
+.eth-coin::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  border: 2px solid rgba(212, 175, 55, 0.4);
+}
+
+.eth-coin svg {
+  width: 50%;
+  height: 50%;
+  fill: #D4AF37;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+/* Circuit Glow Effect (Static) */
+.circuit-glow {
+  position: relative;
+}
+
+.circuit-glow::after {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(circle at center, 
+    rgba(212, 175, 55, 0.15) 0%, 
+    transparent 70%
+  );
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* Ornate Header */
+.ornate-header {
+  position: relative;
+  padding: 2rem 0;
+}
+
+.ornate-header::before,
+.ornate-header::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(212, 175, 55, 0.6) 50%, 
+    transparent 100%
+  );
+}
+
+.ornate-header::before {
+  top: 0;
+}
+
+.ornate-header::after {
+  bottom: 0;
+}
+
+/* Immutable Record Panel (Baroque Style) */
+.baroque-panel {
+  background: linear-gradient(135deg, 
+    rgba(10, 10, 10, 0.95) 0%,
+    rgba(20, 20, 20, 0.95) 50%,
+    rgba(10, 10, 10, 0.95) 100%
+  );
+  border: 3px solid;
+  border-image: linear-gradient(135deg, 
+    rgba(212, 175, 55, 0.6) 0%, 
+    rgba(255, 215, 0, 0.8) 50%, 
+    rgba(212, 175, 55, 0.6) 100%
+  ) 1;
+  position: relative;
+  box-shadow: 
+    0 0 30px rgba(212, 175, 55, 0.3),
+    inset 0 0 50px rgba(212, 175, 55, 0.05);
+}
+
+.baroque-panel::before,
+.baroque-panel::after {
+  content: '';
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background: radial-gradient(circle, 
+    rgba(212, 175, 55, 0.4) 0%, 
+    transparent 70%
+  );
+}
+
+.baroque-panel::before {
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.baroque-panel::after {
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Verified Badge (Gold Seal) */
+.verified-seal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, 
+    rgba(212, 175, 55, 0.3) 0%, 
+    rgba(255, 215, 0, 0.5) 50%, 
+    rgba(212, 175, 55, 0.3) 100%
+  );
+  border-radius: 50%;
+  border: 3px solid rgba(212, 175, 55, 0.8);
+  box-shadow: 
+    0 0 20px rgba(212, 175, 55, 0.4),
+    inset 0 2px 5px rgba(255, 215, 0, 0.3);
+  position: relative;
+}
+
+.verified-seal::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  border: 2px solid rgba(212, 175, 55, 0.5);
+}
+
+/* Decision Badge Enhancement */
+.decision-badge {
+  position: relative;
+  display: inline-block;
+  padding: 0.75rem 2rem;
+  background: linear-gradient(135deg, 
+    rgba(212, 175, 55, 0.1) 0%, 
+    rgba(212, 175, 55, 0.2) 50%, 
+    rgba(212, 175, 55, 0.1) 100%
+  );
+  border: 2px solid rgba(212, 175, 55, 0.5);
+  clip-path: polygon(10% 0%, 90% 0%, 100% 50%, 90% 100%, 10% 100%, 0% 50%);
+  box-shadow: 
+    0 4px 15px rgba(212, 175, 55, 0.2),
+    inset 0 1px 0 rgba(255, 215, 0, 0.2);
+}
+
+.decision-badge-buy {
+  border-color: rgba(107, 154, 150, 0.6);
+  background: linear-gradient(135deg, 
+    rgba(107, 154, 150, 0.1) 0%, 
+    rgba(107, 154, 150, 0.2) 50%, 
+    rgba(107, 154, 150, 0.1) 100%
+  );
+}
+
+.decision-badge-sell {
+  border-color: rgba(208, 208, 208, 0.6);
+  background: linear-gradient(135deg, 
+    rgba(208, 208, 208, 0.1) 0%, 
+    rgba(208, 208, 208, 0.2) 50%, 
+    rgba(208, 208, 208, 0.1) 100%
+  );
+}
+
+.decision-badge-hold {
+  border-color: rgba(168, 153, 104, 0.6);
+  background: linear-gradient(135deg, 
+    rgba(168, 153, 104, 0.1) 0%, 
+    rgba(168, 153, 104, 0.2) 50%, 
+    rgba(168, 153, 104, 0.1) 100%
+  );
+}
+
+/* Smooth Transitions (NO INFINITE LOOPS) */
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hover Glow (ONLY on hover, not looping) */
+.hover-glow {
+  transition: all 0.4s ease;
+}
+
+.hover-glow:hover {
+  box-shadow: 
+    0 0 30px rgba(212, 175, 55, 0.4),
+    inset 0 0 20px rgba(212, 175, 55, 0.1);
+  transform: translateY(-4px);
+}
+
+/* Text Gold Gradient */
+.text-gold-gradient {
+  background: linear-gradient(135deg, 
+    #D4AF37 0%, 
+    #FFD700 50%, 
+    #D4AF37 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Metric Box (Gold Frame) */
+.metric-box {
+  background: linear-gradient(135deg, 
+    rgba(16, 16, 16, 0.9) 0%,
+    rgba(26, 26, 26, 0.9) 100%
+  );
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.5),
+    inset 0 -1px 2px rgba(212, 175, 55, 0.1);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .metallic-card {
+    border-width: 1px;
+  }
+  
+  .eth-coin-container {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .baroque-panel {
+    border-width: 2px;
+  }
+}

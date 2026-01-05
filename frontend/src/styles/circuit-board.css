@@ -1,453 +1,604 @@
 /* ============================================
-   PANTHEON PRO - CIRCUIT BOARD GOLD THEME
-   Advanced Implementation
+   PANTHEON PRO - EXACT CIRCUIT BOARD REPLICA
    ============================================ */
 
-/* Circuit Board Background */
-.circuit-background {
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.pantheon-container {
+  min-height: 100vh;
+  background: #000000;
+  position: relative;
+  overflow-x: hidden;
+  font-family: 'Cinzel', serif;
+}
+
+/* ============================================
+   CIRCUIT BOARD BACKGROUND LAYERS
+   ============================================ */
+
+/* Layer 1: Base Circuit Grid */
+.circuit-bg-layer-1 {
   position: fixed;
   inset: 0;
-  background: 
-    linear-gradient(90deg, rgba(30, 30, 30, 0.05) 1px, transparent 1px),
-    linear-gradient(rgba(30, 30, 30, 0.05) 1px, transparent 1px);
-  background-size: 20px 20px;
+  background-color: #000;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 9px, rgba(212, 175, 55, 0.02) 9px, rgba(212, 175, 55, 0.02) 10px),
+    repeating-linear-gradient(90deg, transparent, transparent 9px, rgba(212, 175, 55, 0.02) 9px, rgba(212, 175, 55, 0.02) 10px);
   z-index: 0;
 }
 
-.circuit-background::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: 
-    radial-gradient(circle at 20% 50%, rgba(212, 175, 55, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 50%, rgba(212, 175, 55, 0.03) 0%, transparent 50%);
-  animation: none; /* NO LOOPING */
-}
-
-/* Circuit Lines (Static) */
-.circuit-lines {
+/* Layer 2: Circuit Traces - ENHANCED VISIBILITY */
+.circuit-bg-layer-2 {
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(90deg, transparent 0%, transparent 48%, rgba(212, 175, 55, 0.1) 49%, rgba(212, 175, 55, 0.1) 51%, transparent 52%, transparent 100%),
-    linear-gradient(0deg, transparent 0%, transparent 48%, rgba(212, 175, 55, 0.1) 49%, rgba(212, 175, 55, 0.1) 51%, transparent 52%, transparent 100%);
-  background-size: 100px 100px;
-  opacity: 0.3;
-  pointer-events: none;
+    /* Main horizontal traces - BRIGHTER */
+    repeating-linear-gradient(0deg, 
+      transparent 0px,
+      transparent 35px,
+      rgba(212, 175, 55, 0.25) 35px,
+      rgba(212, 175, 55, 0.25) 37px,
+      transparent 37px,
+      transparent 70px,
+      rgba(212, 175, 55, 0.15) 70px,
+      rgba(212, 175, 55, 0.15) 71px
+    ),
+    /* Main vertical traces - BRIGHTER */
+    repeating-linear-gradient(90deg,
+      transparent 0px,
+      transparent 50px,
+      rgba(212, 175, 55, 0.22) 50px,
+      rgba(212, 175, 55, 0.22) 52px,
+      transparent 52px,
+      transparent 100px,
+      rgba(212, 175, 55, 0.12) 100px,
+      rgba(212, 175, 55, 0.12) 101px
+    ),
+    /* Diagonal circuit paths - MORE VISIBLE */
+    repeating-linear-gradient(45deg,
+      transparent 0px,
+      transparent 120px,
+      rgba(212, 175, 55, 0.1) 120px,
+      rgba(212, 175, 55, 0.1) 122px
+    ),
+    /* Additional diagonal the other way */
+    repeating-linear-gradient(-45deg,
+      transparent 0px,
+      transparent 120px,
+      rgba(212, 175, 55, 0.08) 120px,
+      rgba(212, 175, 55, 0.08) 121px
+    );
+  opacity: 1;
   z-index: 1;
 }
 
-/* Metallic Gold Card */
-.metallic-card {
-  background: linear-gradient(135deg, 
-    rgba(20, 20, 20, 0.95) 0%,
-    rgba(30, 30, 30, 0.95) 50%,
-    rgba(20, 20, 20, 0.95) 100%
-  );
-  border: 2px solid;
-  border-image: linear-gradient(135deg, 
-    rgba(212, 175, 55, 0.4) 0%, 
-    rgba(255, 215, 0, 0.6) 50%, 
-    rgba(212, 175, 55, 0.4) 100%
-  ) 1;
-  box-shadow: 
-    0 0 20px rgba(212, 175, 55, 0.2),
-    inset 0 1px 0 rgba(255, 215, 0, 0.1),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+/* Layer 3: Large Circuit Pathways */
+.circuit-bg-layer-3 {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(90deg, transparent 49%, rgba(212, 175, 55, 0.08) 50%, transparent 51%),
+    linear-gradient(0deg, transparent 49%, rgba(212, 175, 55, 0.08) 50%, transparent 51%);
+  background-size: 200px 200px;
+  z-index: 1;
+}
+
+.content-wrapper {
   position: relative;
-  overflow: hidden;
+  z-index: 2;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
 }
 
-.metallic-card::before {
+/* ============================================
+   BAROQUE HEADER
+   ============================================ */
+
+.baroque-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid rgba(212, 175, 55, 0.3);
+  position: relative;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.title-main {
+  font-family: 'Cinzel', serif;
+  font-size: 3.5rem;
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  background: linear-gradient(135deg, #C39A4A 0%, #FFD700 50%, #D4AF37 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
+  margin: 0;
+  line-height: 1;
+}
+
+.title-sub {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 1.1rem;
+  color: #C0C0C0;
+  letter-spacing: 0.15em;
+  margin-top: 0.5rem;
+}
+
+/* ETH Medallion (Center Header) */
+.eth-medallion {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  flex-shrink: 0;
+}
+
+.medallion-outer-ring {
+  position: absolute;
+  inset: 0;
+  border: 3px solid #D4AF37;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.2) 0%, transparent 70%);
+  box-shadow: 
+    0 0 30px rgba(212, 175, 55, 0.4),
+    inset 0 2px 5px rgba(255, 215, 0, 0.3);
+}
+
+.baroque-flourish {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.3) 0%, transparent 70%);
+  filter: blur(8px);
+}
+
+.baroque-flourish-left {
+  top: 50%;
+  left: -40px;
+  transform: translateY(-50%);
+}
+
+.baroque-flourish-right {
+  top: 50%;
+  right: -40px;
+  transform: translateY(-50%);
+}
+
+.medallion-inner {
+  position: absolute;
+  inset: 12px;
+  background: linear-gradient(135deg, rgba(20, 20, 20, 0.95) 0%, rgba(40, 40, 40, 0.95) 100%);
+  border-radius: 50%;
+  border: 2px solid rgba(212, 175, 55, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+.eth-logo {
+  width: 50%;
+  height: 50%;
+  filter: drop-shadow(0 2px 8px rgba(212, 175, 55, 0.6));
+}
+
+.header-right {
+  flex: 1;
+  text-align: right;
+  font-family: 'Courier New', monospace;
+}
+
+.time-display {
+  font-size: 0.9rem;
+  color: #808080;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.network-badge {
+  font-size: 0.7rem;
+  color: #D4AF37;
+  letter-spacing: 0.2em;
+}
+
+/* ============================================
+   ETH BANNER
+   ============================================ */
+
+.eth-banner {
+  position: relative;
+  margin: 2rem 0 3rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.circuit-connector {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(212, 175, 55, 0.4) 50%, transparent 100%);
+  position: relative;
+}
+
+.circuit-connector::before,
+.circuit-connector::after {
   content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(135deg, 
-    transparent 0%, 
-    rgba(212, 175, 55, 0.1) 50%, 
-    transparent 100%
-  );
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  pointer-events: none;
-}
-
-.metallic-card:hover::before {
-  opacity: 1;
-}
-
-/* Corner Decorations (Enhanced) */
-.corner-ornament {
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.6) 0%, transparent 100%);
-  clip-path: polygon(0 0, 100% 0, 0 100%);
-}
-
-.corner-ornament-tl {
-  top: 0;
-  left: 0;
-  transform: rotate(0deg);
-}
-
-.corner-ornament-tr {
-  top: 0;
-  right: 0;
-  transform: rotate(90deg);
-}
-
-.corner-ornament-bl {
-  bottom: 0;
-  left: 0;
-  transform: rotate(-90deg);
-}
-
-.corner-ornament-br {
-  bottom: 0;
-  right: 0;
-  transform: rotate(180deg);
-}
-
-/* Circuit Node Decoration */
-.circuit-node {
   position: absolute;
   width: 8px;
   height: 8px;
-  background: radial-gradient(circle, 
-    rgba(212, 175, 55, 1) 0%, 
-    rgba(212, 175, 55, 0.4) 50%, 
-    transparent 100%
-  );
+  background: #D4AF37;
   border-radius: 50%;
   box-shadow: 0 0 10px rgba(212, 175, 55, 0.8);
 }
 
-/* Gold Button Style */
-.gold-button {
-  background: linear-gradient(135deg, 
-    rgba(212, 175, 55, 0.15) 0%, 
-    rgba(212, 175, 55, 0.25) 50%, 
-    rgba(212, 175, 55, 0.15) 100%
-  );
-  border: 2px solid rgba(212, 175, 55, 0.6);
+.circuit-connector::before { left: 20%; top: 50%; transform: translateY(-50%); }
+.circuit-connector::after { right: 20%; top: 50%; transform: translateY(-50%); }
+
+.banner-content {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+  background: linear-gradient(135deg, rgba(20, 20, 20, 0.95) 0%, rgba(30, 30, 30, 0.95) 100%);
+  border: 3px solid;
+  border-image: linear-gradient(90deg, rgba(212, 175, 55, 0.4), rgba(255, 215, 0, 0.8), rgba(212, 175, 55, 0.4)) 1;
+  padding: 1.5rem 3rem;
+  box-shadow: 
+    0 0 40px rgba(212, 175, 55, 0.3),
+    inset 0 2px 10px rgba(0, 0, 0, 0.6);
+}
+
+.banner-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.banner-label {
+  font-size: 0.65rem;
+  color: #808080;
+  letter-spacing: 0.2em;
+}
+
+.banner-value {
+  font-size: 1.8rem;
+  font-weight: 700;
   color: #D4AF37;
-  font-family: 'Cinzel', serif;
-  font-size: 0.75rem;
-  font-weight: 600;
   letter-spacing: 0.15em;
-  padding: 0.75rem 2rem;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  box-shadow: 
-    0 4px 15px rgba(212, 175, 55, 0.2),
-    inset 0 1px 0 rgba(255, 215, 0, 0.2);
 }
 
-.gold-button::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  transform: translate(-50%, -50%);
-  background: rgba(212, 175, 55, 0.3);
-  border-radius: 50%;
-  transition: width 0.6s ease, height 0.6s ease;
+.banner-sublabel {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 0.7rem;
+  color: #A0A0A0;
 }
 
-.gold-button:hover::before {
-  width: 300px;
-  height: 300px;
+.eth-coin-center {
+  width: 100px;
+  height: 100px;
 }
 
-.gold-button:hover {
-  border-color: rgba(255, 215, 0, 0.8);
-  box-shadow: 
-    0 6px 25px rgba(212, 175, 55, 0.4),
-    inset 0 1px 0 rgba(255, 215, 0, 0.4);
-  transform: translateY(-2px);
-}
-
-.gold-button span {
-  position: relative;
-  z-index: 1;
-}
-
-/* ETH Coin (3D Metallic) */
-.eth-coin-container {
-  position: relative;
-  width: 120px;
-  height: 120px;
-  margin: 0 auto;
-}
-
-.eth-coin {
+.coin-3d {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, 
-    rgba(212, 175, 55, 0.3) 0%, 
-    rgba(255, 215, 0, 0.5) 50%, 
-    rgba(212, 175, 55, 0.3) 100%
-  );
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.3) 0%, transparent 70%);
   border-radius: 50%;
   border: 3px solid rgba(212, 175, 55, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
   box-shadow: 
-    0 10px 40px rgba(212, 175, 55, 0.3),
-    inset 0 -5px 20px rgba(0, 0, 0, 0.3),
-    inset 0 5px 20px rgba(255, 215, 0, 0.2);
+    0 8px 30px rgba(212, 175, 55, 0.4),
+    inset 0 -3px 10px rgba(0, 0, 0, 0.5),
+    inset 0 3px 10px rgba(255, 215, 0, 0.2);
+  position: relative;
 }
 
-.eth-coin::before {
+.coin-3d::before {
   content: '';
   position: absolute;
-  inset: 8px;
-  border-radius: 50%;
+  inset: 6px;
   border: 2px solid rgba(212, 175, 55, 0.4);
+  border-radius: 50%;
 }
 
-.eth-coin svg {
-  width: 50%;
-  height: 50%;
-  fill: #D4AF37;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+.eth-icon {
+  width: 40%;
+  height: 40%;
+  filter: drop-shadow(0 2px 6px rgba(212, 175, 55, 0.8));
 }
 
-/* Circuit Glow Effect (Static) */
-.circuit-glow {
+/* ============================================
+   SECTION TITLE
+   ============================================ */
+
+.section-title {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  color: #D4AF37;
+  text-transform: uppercase;
+  margin: 3rem 0 2rem;
+  text-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+}
+
+/* ============================================
+   COUNCIL CARDS (3D METALLIC)
+   ============================================ */
+
+.council-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.council-card {
   position: relative;
 }
 
-.circuit-glow::after {
-  content: '';
-  position: absolute;
-  inset: -20px;
-  background: radial-gradient(circle at center, 
-    rgba(212, 175, 55, 0.15) 0%, 
-    transparent 70%
-  );
-  pointer-events: none;
-  opacity: 0.6;
+.card-frame-outer {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.3) 0%, rgba(255, 215, 0, 0.5) 50%, rgba(212, 175, 55, 0.3) 100%);
+  padding: 3px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
 }
 
-/* Ornate Header */
-.ornate-header {
-  position: relative;
-  padding: 2rem 0;
-}
-
-.ornate-header::before,
-.ornate-header::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 200px;
-  height: 1px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(212, 175, 55, 0.6) 50%, 
-    transparent 100%
-  );
-}
-
-.ornate-header::before {
-  top: 0;
-}
-
-.ornate-header::after {
-  bottom: 0;
-}
-
-/* Immutable Record Panel (Baroque Style) */
-.baroque-panel {
-  background: linear-gradient(135deg, 
-    rgba(10, 10, 10, 0.95) 0%,
-    rgba(20, 20, 20, 0.95) 50%,
-    rgba(10, 10, 10, 0.95) 100%
-  );
-  border: 3px solid;
-  border-image: linear-gradient(135deg, 
-    rgba(212, 175, 55, 0.6) 0%, 
-    rgba(255, 215, 0, 0.8) 50%, 
-    rgba(212, 175, 55, 0.6) 100%
-  ) 1;
+.card-frame-inner {
+  background: linear-gradient(135deg, rgba(15, 15, 15, 0.98) 0%, rgba(25, 25, 25, 0.98) 50%, rgba(15, 15, 15, 0.98) 100%);
+  border: 2px solid rgba(212, 175, 55, 0.4);
   position: relative;
   box-shadow: 
-    0 0 30px rgba(212, 175, 55, 0.3),
-    inset 0 0 50px rgba(212, 175, 55, 0.05);
+    inset 0 2px 1px rgba(255, 215, 0, 0.1),
+    inset 0 -2px 1px rgba(0, 0, 0, 0.8);
 }
 
-.baroque-panel::before,
-.baroque-panel::after {
-  content: '';
+.circuit-node {
   position: absolute;
-  width: 40px;
-  height: 40px;
-  background: radial-gradient(circle, 
-    rgba(212, 175, 55, 0.4) 0%, 
-    transparent 70%
-  );
+  width: 6px;
+  height: 6px;
+  background: #D4AF37;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.8);
+  z-index: 2;
 }
 
-.baroque-panel::before {
-  top: -20px;
-  left: 50%;
-  transform: translateX(-50%);
+.card-content {
+  padding: 2rem 1.5rem;
 }
 
-.baroque-panel::after {
-  bottom: -20px;
-  left: 50%;
-  transform: translateX(-50%);
+.agent-symbol {
+  text-align: center;
+  font-size: 2.5rem;
+  color: #D4AF37;
+  margin-bottom: 1rem;
+  text-shadow: 0 0 15px rgba(212, 175, 55, 0.6);
 }
 
-/* Verified Badge (Gold Seal) */
-.verified-seal {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.agent-name {
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: #D4AF37;
+  margin-bottom: 0.5rem;
+}
+
+.agent-latin {
+  text-align: center;
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 0.8rem;
+  color: #A0A0A0;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.decision-badge-container {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.decision-badge {
+  display: inline-block;
+  padding: 0.6rem 2rem;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(255, 215, 0, 0.3) 50%, rgba(212, 175, 55, 0.2) 100%);
+  border: 2px solid rgba(212, 175, 55, 0.6);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: #D4AF37;
+  box-shadow: 
+    0 4px 15px rgba(212, 175, 55, 0.3),
+    inset 0 1px 2px rgba(255, 215, 0, 0.2);
+}
+
+.reasoning-text {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: #C0C0C0;
+  text-align: center;
+  min-height: 60px;
+  margin: 1rem 0;
+}
+
+.metrics-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.metric-box {
+  background: rgba(10, 10, 10, 0.8);
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  padding: 0.75rem;
+  text-align: center;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.metric-label {
+  display: block;
+  font-size: 0.65rem;
+  color: #808080;
+  letter-spacing: 0.15em;
+  margin-bottom: 0.3rem;
+}
+
+.metric-value {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #D4AF37;
+}
+
+/* ============================================
+   IMMUTABLE RECORD PANEL (BAROQUE)
+   ============================================ */
+
+.immutable-panel {
+  position: relative;
+  background: linear-gradient(135deg, rgba(10, 10, 10, 0.98) 0%, rgba(20, 20, 20, 0.98) 100%);
+  border: 3px solid;
+  border-image: linear-gradient(135deg, rgba(212, 175, 55, 0.5), rgba(255, 215, 0, 0.8), rgba(212, 175, 55, 0.5)) 1;
+  padding: 2.5rem 3rem;
+  box-shadow: 
+    0 0 50px rgba(212, 175, 55, 0.4),
+    inset 0 0 60px rgba(212, 175, 55, 0.05);
+}
+
+.baroque-corner {
+  position: absolute;
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, 
-    rgba(212, 175, 55, 0.3) 0%, 
-    rgba(255, 215, 0, 0.5) 50%, 
-    rgba(212, 175, 55, 0.3) 100%
-  );
-  border-radius: 50%;
-  border: 3px solid rgba(212, 175, 55, 0.8);
-  box-shadow: 
-    0 0 20px rgba(212, 175, 55, 0.4),
-    inset 0 2px 5px rgba(255, 215, 0, 0.3);
+  background-image: 
+    radial-gradient(circle at center, rgba(212, 175, 55, 0.3) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.baroque-tl { top: -40px; left: -40px; }
+.baroque-tr { top: -40px; right: -40px; }
+.baroque-bl { bottom: -40px; left: -40px; }
+.baroque-br { bottom: -40px; right: -40px; }
+
+.panel-title {
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  color: #D4AF37;
+  margin-bottom: 2rem;
+  text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+}
+
+.record-content {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 2rem;
   position: relative;
 }
 
-.verified-seal::before {
-  content: '';
-  position: absolute;
-  inset: 5px;
-  border-radius: 50%;
-  border: 2px solid rgba(212, 175, 55, 0.5);
+.record-section {
+  text-align: center;
 }
 
-/* Decision Badge Enhancement */
-.decision-badge {
-  position: relative;
-  display: inline-block;
-  padding: 0.75rem 2rem;
-  background: linear-gradient(135deg, 
-    rgba(212, 175, 55, 0.1) 0%, 
-    rgba(212, 175, 55, 0.2) 50%, 
-    rgba(212, 175, 55, 0.1) 100%
-  );
-  border: 2px solid rgba(212, 175, 55, 0.5);
-  clip-path: polygon(10% 0%, 90% 0%, 100% 50%, 90% 100%, 10% 100%, 0% 50%);
+.record-plate {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(255, 215, 0, 0.3) 50%, rgba(212, 175, 55, 0.2) 100%);
+  border: 2px solid rgba(212, 175, 55, 0.6);
+  padding: 0.8rem 2rem;
+  border-radius: 50px;
   box-shadow: 
-    0 4px 15px rgba(212, 175, 55, 0.2),
-    inset 0 1px 0 rgba(255, 215, 0, 0.2);
+    0 4px 15px rgba(212, 175, 55, 0.3),
+    inset 0 2px 4px rgba(255, 215, 0, 0.2);
 }
 
-.decision-badge-buy {
-  border-color: rgba(107, 154, 150, 0.6);
-  background: linear-gradient(135deg, 
-    rgba(107, 154, 150, 0.1) 0%, 
-    rgba(107, 154, 150, 0.2) 50%, 
-    rgba(107, 154, 150, 0.1) 100%
-  );
+.plate-text {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #D4AF37;
 }
 
-.decision-badge-sell {
-  border-color: rgba(208, 208, 208, 0.6);
-  background: linear-gradient(135deg, 
-    rgba(208, 208, 208, 0.1) 0%, 
-    rgba(208, 208, 208, 0.2) 50%, 
-    rgba(208, 208, 208, 0.1) 100%
-  );
+.record-label {
+  font-size: 0.7rem;
+  color: #808080;
+  letter-spacing: 0.15em;
+  margin-bottom: 0.5rem;
 }
 
-.decision-badge-hold {
-  border-color: rgba(168, 153, 104, 0.6);
-  background: linear-gradient(135deg, 
-    rgba(168, 153, 104, 0.1) 0%, 
-    rgba(168, 153, 104, 0.2) 50%, 
-    rgba(168, 153, 104, 0.1) 100%
-  );
+.record-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #D4AF37;
 }
 
-/* Smooth Transitions (NO INFINITE LOOPS) */
-.fade-in-up {
-  animation: fadeInUp 0.6s ease-out;
+.status-verified {
+  color: #6B9A96;
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Hover Glow (ONLY on hover, not looping) */
-.hover-glow {
-  transition: all 0.4s ease;
-}
-
-.hover-glow:hover {
+.inspect-button {
+  display: block;
+  margin: 0 auto;
+  padding: 0.8rem 3rem;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(255, 215, 0, 0.3) 50%, rgba(212, 175, 55, 0.2) 100%);
+  border: 2px solid rgba(212, 175, 55, 0.6);
+  border-radius: 4px;
+  color: #D4AF37;
+  font-family: 'Cinzel', serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+  transition: all 0.3s ease;
   box-shadow: 
-    0 0 30px rgba(212, 175, 55, 0.4),
-    inset 0 0 20px rgba(212, 175, 55, 0.1);
-  transform: translateY(-4px);
+    0 4px 20px rgba(212, 175, 55, 0.3),
+    inset 0 1px 2px rgba(255, 215, 0, 0.2);
 }
 
-/* Text Gold Gradient */
-.text-gold-gradient {
-  background: linear-gradient(135deg, 
-    #D4AF37 0%, 
-    #FFD700 50%, 
-    #D4AF37 100%
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Metric Box (Gold Frame) */
-.metric-box {
-  background: linear-gradient(135deg, 
-    rgba(16, 16, 16, 0.9) 0%,
-    rgba(26, 26, 26, 0.9) 100%
-  );
-  border: 2px solid rgba(212, 175, 55, 0.3);
+.inspect-button:hover {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.3) 0%, rgba(255, 215, 0, 0.5) 50%, rgba(212, 175, 55, 0.3) 100%);
   box-shadow: 
-    inset 0 2px 4px rgba(0, 0, 0, 0.5),
-    inset 0 -1px 2px rgba(212, 175, 55, 0.1);
+    0 6px 30px rgba(212, 175, 55, 0.5),
+    inset 0 1px 2px rgba(255, 215, 0, 0.4);
+  transform: translateY(-2px);
 }
 
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-  .metallic-card {
-    border-width: 1px;
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 1200px) {
+  .council-grid {
+    grid-template-columns: 1fr;
+    max-width: 500px;
+    margin: 0 auto 3rem;
   }
   
-  .eth-coin-container {
-    width: 80px;
-    height: 80px;
+  .title-main {
+    font-size: 2.5rem;
   }
   
-  .baroque-panel {
-    border-width: 2px;
+  .banner-content {
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 2rem;
   }
 }
