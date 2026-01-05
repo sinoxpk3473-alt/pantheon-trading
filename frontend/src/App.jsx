@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import './styles/circuit-board.css';
+import AnalyticsDashboard from './components/AnalyticsDashboard';
 
 const CONTRACT_ADDRESS = '0x13713f5E8fbfD05E7B7DcA81E231D89D51D2ccB3';
 const RPC_URL = 'https://rpc-amoy.polygon.technology';
@@ -182,6 +183,13 @@ function App() {
           ))}
         </div>
 
+        {!loading && councilMembers.length > 0 && (
+          <AnalyticsDashboard 
+            totalDebates={totalDebates}
+            latestDebate={latestDebate}
+            councilMembers={councilMembers}
+          />
+        )}
         {/* Immutable Record - Baroque Panel */}
         <div className="immutable-panel">
           <div className="baroque-corner baroque-tl" />
