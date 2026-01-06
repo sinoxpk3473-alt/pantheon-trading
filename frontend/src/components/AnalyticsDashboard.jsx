@@ -1,230 +1,367 @@
 import React, { useState, useEffect } from 'react';
 
-const AnalyticsDashboard = ({ totalDebates, latestDebate, councilMembers }) => {
+const AnalyticsDashboard = ({ totalDebates, councilMembers }) => {
   const [stats, setStats] = useState({
-    analystStats: { buy: 0, sell: 0, hold: 0, avgConfidence: 0 },
-    skepticStats: { buy: 0, sell: 0, hold: 0, avgConfidence: 0 },
-    degenStats: { buy: 0, sell: 0, hold: 0, avgConfidence: 0 },
-    consensusHistory: []
+    decisionBreakdown: { BUY: 0, SELL: 0, HOLD: 0 },
+    agentPerformance: {
+      analyst: { correct: 0, total: 0 },
+      skeptic: { correct: 0, total: 0 },
+      degen: { correct: 0, total: 0 }
+    },
+    confidenceTrend: [],
+    avgConfidence: 0
   });
 
   useEffect(() => {
     if (councilMembers.length === 3) {
+      // Mock data - in production, fetch from backend
       const newStats = {
-        analystStats: calculateAgentStats(councilMembers[0]),
-        skepticStats: calculateAgentStats(councilMembers[1]),
-        degenStats: calculateAgentStats(councilMembers[2]),
-        consensusHistory: generateMockHistory(totalDebates)
+        decisionBreakdown: {
+          BUY: Math.floor(totalDebates * 0.35),
+          SELL: Math.floor(totalDebates * 0.25),
+          HOLD: Math.floor(totalDebates * 0.40)
+        },
+        agentPerformance: {
+          analyst: { correct: Math.floor(totalDebates * 0.68), total: totalDebates },
+          skeptic: { correct: Math.floor(totalDebates * 0.72), total: totalDebates },
+          degen: { correct: Math.floor(totalDebates * 0.61), total: totalDebates }
+        },
+        confidenceTrend: generateTrend(20),
+        avgConfidence: Math.round((councilMembers[0].confidence + councilMembers[1].confidence + councilMembers[2].confidence) / 3)
       };
       setStats(newStats);
     }
   }, [councilMembers, totalDebates]);
 
-  const calculateAgentStats = (agent) => {
-    const decision = agent.decision;
-    return {
-      buy: decision === 'BUY' ? 1 : 0,
-      sell: decision === 'SELL' ? 1 : 0,
-      hold: decision === 'HOLD' ? 1 : 0,
-      avgConfidence: agent.confidence || 0
-    };
-  };
-
-  const generateMockHistory = (total) => {
-    const history = [];
-    for (let i = Math.max(0, total - 10); i < total; i++) {
-      history.push({
-        id: i + 1,
-        confidence: 50 + Math.random() * 40
+  const generateTrend = (count) => {
+    const trend = [];
+    for (let i = 0; i < count; i++) {
+      trend.push({
+        debate: totalDebates - count + i + 1,
+        confidence: 50 + Math.random() * 40,
+        decision: ['BUY', 'SELL', 'HOLD'][Math.floor(Math.random() * 3)]
       });
     }
-    return history;
+    return trend;
   };
 
-  const AgentStatCard = ({ name, symbol, stats }) => {
-    const total = stats.buy + stats.sell + stats.hold || 1;
-    const buyPct = Math.round((stats.buy / total) * 100);
-    const sellPct = Math.round((stats.sell / total) * 100);
-    const holdPct = Math.round((stats.hold / total) * 100);
+  const DecisionPieChart = ({ data }) => {
+    const total = data.BUY + data.SELL + data.HOLD || 1;
+    const buyPct = (data.BUY / total) * 100;
+    const sellPct = (data.SELL / total) * 100;
+    const holdPct = (data.HOLD / total) * 100;
+
+    // Calculate pie slices
+    const buyAngle = (buyPct / 100) * 360;
+    const sellAngle = (sellPct / 100) * 360;
+    const holdAngle = (holdPct / 100) * 360;
+
+    const createArc = (startAngle, endAngle, color) => {
+      const start = polarToCartesian(100, 100, 80, endAngle);
+      const end = polarToCartesian(100, 100, 80, startAngle);
+      const largeArc = endAngle - startAngle <= 180 ? '0' : '1';
+      
+      return `M 100 100 L ${start.x} ${start.y} A 80 80 0 ${largeArc} 0 ${end.x} ${end.y} Z`;
+    };
+
+    const polarToCartesian = (cx, cy, r, angle) => {
+      const rad = (angle - 90) * Math.PI / 180;
+      return {
+        x: cx + r * Math.cos(rad),
+        y: cy + r * Math.sin(rad)
+      };
+    };
 
     return (
       <div style={{
-        background: 'linear-gradient(135deg, rgba(15,15,15,0.98) 0%, rgba(25,25,25,0.98) 100%)',
-        border: '2px solid rgba(212,175,55,0.3)',
-        padding: '1.5rem',
-        position: 'relative'
+        display: 'flex',
+        alignItems: 'center',
+        gap: '3rem'
       }}>
-        <div style={{position: 'absolute', top: '8px', left: '8px', width: '6px', height: '6px', background: '#D4AF37', borderRadius: '50%', boxShadow: '0 0 8px rgba(212,175,55,0.8)'}} />
-        <div style={{position: 'absolute', top: '8px', right: '8px', width: '6px', height: '6px', background: '#D4AF37', borderRadius: '50%', boxShadow: '0 0 8px rgba(212,175,55,0.8)'}} />
-        <div style={{position: 'absolute', bottom: '8px', left: '8px', width: '6px', height: '6px', background: '#D4AF37', borderRadius: '50%', boxShadow: '0 0 8px rgba(212,175,55,0.8)'}} />
-        <div style={{position: 'absolute', bottom: '8px', right: '8px', width: '6px', height: '6px', background: '#D4AF37', borderRadius: '50%', boxShadow: '0 0 8px rgba(212,175,55,0.8)'}} />
+        <svg width="200" height="200" viewBox="0 0 200 200">
+          {/* BUY slice */}
+          <path
+            d={createArc(0, buyAngle, '#6B9A96')}
+            fill="#6B9A96"
+            opacity="0.8"
+            stroke="#000"
+            strokeWidth="2"
+          />
+          {/* SELL slice */}
+          <path
+            d={createArc(buyAngle, buyAngle + sellAngle, '#D0D0D0')}
+            fill="#D0D0D0"
+            opacity="0.8"
+            stroke="#000"
+            strokeWidth="2"
+          />
+          {/* HOLD slice */}
+          <path
+            d={createArc(buyAngle + sellAngle, 360, '#A89968')}
+            fill="#A89968"
+            opacity="0.8"
+            stroke="#000"
+            strokeWidth="2"
+          />
+          
+          {/* Center circle */}
+          <circle cx="100" cy="100" r="50" fill="rgba(10,10,10,0.9)" stroke="#D4AF37" strokeWidth="2" />
+          
+          {/* Center text */}
+          <text x="100" y="95" textAnchor="middle" fill="#D4AF37" fontSize="12" fontFamily="'Cinzel', serif" letterSpacing="2">
+            TOTAL
+          </text>
+          <text x="100" y="115" textAnchor="middle" fill="#D4AF37" fontSize="24" fontFamily="'Space Mono', monospace" fontWeight="700">
+            {total}
+          </text>
+        </svg>
 
-        <div style={{
-          textAlign: 'center',
-          fontSize: '2rem',
-          color: '#D4AF37',
-          marginBottom: '0.5rem'
-        }}>
-          {symbol}
-        </div>
-
-        <div style={{
-          fontFamily: "'Cinzel', serif",
-          fontSize: '0.9rem',
-          fontWeight: 700,
-          letterSpacing: '0.15em',
-          color: '#D4AF37',
-          textAlign: 'center',
-          marginBottom: '1rem'
-        }}>
-          {name}
-        </div>
-
-        <div style={{marginBottom: '1rem'}}>
-          <div style={{
-            fontSize: '0.65rem',
-            color: '#808080',
-            letterSpacing: '0.1em',
-            marginBottom: '0.5rem',
-            textAlign: 'center'
-          }}>
-            DECISION DISTRIBUTION
-          </div>
-
-          <div style={{
-            display: 'flex',
-            height: '30px',
-            border: '1px solid rgba(212,175,55,0.2)',
-            overflow: 'hidden'
-          }}>
-            {buyPct > 0 && (
+        <div style={{flex: 1}}>
+          <div style={{marginBottom: '1rem'}}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem',
+              marginBottom: '0.5rem'
+            }}>
               <div style={{
-                flex: buyPct,
-                background: 'linear-gradient(135deg, rgba(107,154,150,0.3), rgba(107,154,150,0.5))',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '0.7rem',
-                fontWeight: 700,
-                color: '#6B9A96',
-                fontFamily: "'Space Mono', monospace"
-              }}>
-                {buyPct}%
+                width: '20px',
+                height: '20px',
+                background: '#6B9A96',
+                border: '2px solid #6B9A96'
+              }} />
+              <div style={{flex: 1}}>
+                <div style={{
+                  fontFamily: "'Cinzel', serif",
+                  fontSize: '0.8rem',
+                  letterSpacing: '0.1em',
+                  color: '#6B9A96',
+                  marginBottom: '0.25rem'
+                }}>
+                  BUY
+                </div>
+                <div style={{
+                  fontFamily: "'Space Mono', monospace",
+                  fontSize: '1.2rem',
+                  fontWeight: 700,
+                  color: '#D4AF37'
+                }}>
+                  {data.BUY} ({buyPct.toFixed(1)}%)
+                </div>
               </div>
-            )}
-            {sellPct > 0 && (
-              <div style={{
-                flex: sellPct,
-                background: 'linear-gradient(135deg, rgba(208,208,208,0.3), rgba(208,208,208,0.5))',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '0.7rem',
-                fontWeight: 700,
-                color: '#D0D0D0',
-                fontFamily: "'Space Mono', monospace"
-              }}>
-                {sellPct}%
-              </div>
-            )}
-            {holdPct > 0 && (
-              <div style={{
-                flex: holdPct,
-                background: 'linear-gradient(135deg, rgba(168,153,104,0.3), rgba(168,153,104,0.5))',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '0.7rem',
-                fontWeight: 700,
-                color: '#A89968',
-                fontFamily: "'Space Mono', monospace"
-              }}>
-                {holdPct}%
-              </div>
-            )}
+            </div>
           </div>
 
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-around',
-            marginTop: '0.5rem',
-            fontSize: '0.65rem',
-            fontFamily: "'Space Mono', monospace"
-          }}>
-            <span style={{color: '#6B9A96'}}>BUY: {stats.buy}</span>
-            <span style={{color: '#D0D0D0'}}>SELL: {stats.sell}</span>
-            <span style={{color: '#A89968'}}>HOLD: {stats.hold}</span>
+          <div style={{marginBottom: '1rem'}}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem',
+              marginBottom: '0.5rem'
+            }}>
+              <div style={{
+                width: '20px',
+                height: '20px',
+                background: '#D0D0D0',
+                border: '2px solid #D0D0D0'
+              }} />
+              <div style={{flex: 1}}>
+                <div style={{
+                  fontFamily: "'Cinzel', serif",
+                  fontSize: '0.8rem',
+                  letterSpacing: '0.1em',
+                  color: '#D0D0D0',
+                  marginBottom: '0.25rem'
+                }}>
+                  SELL
+                </div>
+                <div style={{
+                  fontFamily: "'Space Mono', monospace",
+                  fontSize: '1.2rem',
+                  fontWeight: 700,
+                  color: '#D4AF37'
+                }}>
+                  {data.SELL} ({sellPct.toFixed(1)}%)
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div style={{
-          background: 'rgba(10,10,10,0.8)',
-          border: '1px solid rgba(212,175,55,0.2)',
-          padding: '0.75rem',
-          textAlign: 'center'
-        }}>
-          <div style={{
-            fontSize: '0.65rem',
-            color: '#808080',
-            letterSpacing: '0.1em',
-            marginBottom: '0.25rem'
-          }}>
-            AVG CONFIDENCE
-          </div>
-          <div style={{
-            fontSize: '1.5rem',
-            fontWeight: 700,
-            color: '#D4AF37',
-            fontFamily: "'Space Mono', monospace"
-          }}>
-            {stats.avgConfidence}%
+          <div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem',
+              marginBottom: '0.5rem'
+            }}>
+              <div style={{
+                width: '20px',
+                height: '20px',
+                background: '#A89968',
+                border: '2px solid #A89968'
+              }} />
+              <div style={{flex: 1}}>
+                <div style={{
+                  fontFamily: "'Cinzel', serif",
+                  fontSize: '0.8rem',
+                  letterSpacing: '0.1em',
+                  color: '#A89968',
+                  marginBottom: '0.25rem'
+                }}>
+                  HOLD
+                </div>
+                <div style={{
+                  fontFamily: "'Space Mono', monospace",
+                  fontSize: '1.2rem',
+                  fontWeight: 700,
+                  color: '#D4AF37'
+                }}>
+                  {data.HOLD} ({holdPct.toFixed(1)}%)
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     );
   };
 
-  const ConfidenceSparkline = ({ history }) => {
-    if (!history || history.length === 0) return null;
-
-    const max = Math.max(...history.map(h => h.confidence));
-    const min = Math.min(...history.map(h => h.confidence));
-    const range = max - min || 1;
-
-    const points = history.map((h, i) => {
-      const x = (i / (history.length - 1)) * 300;
-      const y = 60 - ((h.confidence - min) / range) * 50;
-      return `${x},${y}`;
-    }).join(' ');
+  const AgentPerformanceChart = ({ data }) => {
+    const maxCorrect = Math.max(data.analyst.correct, data.skeptic.correct, data.degen.correct);
+    
+    const agents = [
+      { name: 'ANALYST', symbol: '◈', data: data.analyst, color: '#6B9A96' },
+      { name: 'SKEPTIC', symbol: '◆', data: data.skeptic, color: '#D0D0D0' },
+      { name: 'DEGEN', symbol: '◇', data: data.degen, color: '#A89968' }
+    ];
 
     return (
-      <svg viewBox="0 0 300 60" style={{width: '100%', height: '60px'}}>
-        <line x1="0" y1="10" x2="300" y2="10" stroke="rgba(212,175,55,0.1)" strokeWidth="1" />
-        <line x1="0" y1="30" x2="300" y2="30" stroke="rgba(212,175,55,0.1)" strokeWidth="1" />
-        <line x1="0" y1="50" x2="300" y2="50" stroke="rgba(212,175,55,0.1)" strokeWidth="1" />
+      <div style={{display: 'grid', gap: '1rem'}}>
+        {agents.map((agent) => {
+          const winRate = ((agent.data.correct / agent.data.total) * 100).toFixed(1);
+          const barWidth = (agent.data.correct / maxCorrect) * 100;
 
+          return (
+            <div key={agent.name} style={{
+              background: 'rgba(10,10,10,0.6)',
+              border: '1px solid rgba(212,175,55,0.2)',
+              padding: '1rem'
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '0.75rem'
+              }}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '0.75rem'}}>
+                  <span style={{fontSize: '1.5rem', color: '#D4AF37'}}>{agent.symbol}</span>
+                  <span style={{
+                    fontFamily: "'Cinzel', serif",
+                    fontSize: '0.8rem',
+                    letterSpacing: '0.15em',
+                    color: '#D4AF37'
+                  }}>
+                    {agent.name}
+                  </span>
+                </div>
+                <div style={{
+                  fontFamily: "'Space Mono', monospace",
+                  fontSize: '1.2rem',
+                  fontWeight: 700,
+                  color: agent.color
+                }}>
+                  {winRate}%
+                </div>
+              </div>
+
+              <div style={{
+                height: '30px',
+                background: 'rgba(0,0,0,0.5)',
+                border: '1px solid rgba(212,175,55,0.1)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  height: '100%',
+                  width: `${barWidth}%`,
+                  background: `linear-gradient(90deg, ${agent.color}40, ${agent.color}80)`,
+                  border: `1px solid ${agent.color}`,
+                  transition: 'width 0.5s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  paddingLeft: '0.5rem'
+                }}>
+                  <span style={{
+                    fontFamily: "'Space Mono', monospace",
+                    fontSize: '0.7rem',
+                    color: agent.color,
+                    fontWeight: 700
+                  }}>
+                    {agent.data.correct} / {agent.data.total}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const ConfidenceTimeline = ({ data }) => {
+    if (!data || data.length === 0) return null;
+
+    const maxConf = Math.max(...data.map(d => d.confidence));
+    const minConf = Math.min(...data.map(d => d.confidence));
+    const range = maxConf - minConf || 1;
+
+    const width = 800;
+    const height = 150;
+    const padding = 30;
+
+    const points = data.map((d, i) => {
+      const x = padding + (i / (data.length - 1)) * (width - padding * 2);
+      const y = height - padding - ((d.confidence - minConf) / range) * (height - padding * 2);
+      return { x, y, ...d };
+    });
+
+    return (
+      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} style={{maxWidth: '100%'}}>
+        {/* Grid lines */}
+        <line x1={padding} y1={padding} x2={width - padding} y2={padding} stroke="rgba(212,175,55,0.1)" strokeWidth="1" />
+        <line x1={padding} y1={height / 2} x2={width - padding} y2={height / 2} stroke="rgba(212,175,55,0.1)" strokeWidth="1" />
+        <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="rgba(212,175,55,0.1)" strokeWidth="1" />
+
+        {/* Confidence line */}
         <polyline
-          points={points}
+          points={points.map(p => `${p.x},${p.y}`).join(' ')}
           fill="none"
           stroke="#D4AF37"
           strokeWidth="2"
           style={{filter: 'drop-shadow(0 0 4px rgba(212,175,55,0.6))'}}
         />
 
-        {history.map((h, i) => {
-          const x = (i / (history.length - 1)) * 300;
-          const y = 60 - ((h.confidence - min) / range) * 50;
-          return (
+        {/* Data points */}
+        {points.map((p, i) => (
+          <g key={i}>
             <circle
-              key={i}
-              cx={x}
-              cy={y}
-              r="3"
-              fill="#D4AF37"
-              style={{filter: 'drop-shadow(0 0 3px rgba(212,175,55,0.8))'}}
+              cx={p.x}
+              cy={p.y}
+              r="4"
+              fill={p.decision === 'BUY' ? '#6B9A96' : p.decision === 'SELL' ? '#D0D0D0' : '#A89968'}
+              stroke="#000"
+              strokeWidth="1"
             />
-          );
-        })}
+          </g>
+        ))}
+
+        {/* Axis labels */}
+        <text x={padding} y={height - 5} fontSize="10" fill="#808080" fontFamily="'Space Mono', monospace">
+          #{data[0].debate}
+        </text>
+        <text x={width - padding} y={height - 5} fontSize="10" fill="#808080" fontFamily="'Space Mono', monospace" textAnchor="end">
+          #{data[data.length - 1].debate}
+        </text>
       </svg>
     );
   };
@@ -245,17 +382,67 @@ const AnalyticsDashboard = ({ totalDebates, latestDebate, councilMembers }) => {
         PERFORMANCE ANALYTICS
       </h2>
 
+      {/* Top Row: Decision Distribution + Agent Performance */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '1.5rem',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '2rem',
         marginBottom: '2rem'
       }}>
-        <AgentStatCard name="ANALYST" symbol="◈" stats={stats.analystStats} />
-        <AgentStatCard name="SKEPTIC" symbol="◆" stats={stats.skepticStats} />
-        <AgentStatCard name="DEGEN" symbol="◇" stats={stats.degenStats} />
+        {/* Decision Distribution */}
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(15,15,15,0.98) 0%, rgba(25,25,25,0.98) 100%)',
+          border: '2px solid rgba(212,175,55,0.3)',
+          padding: '2rem',
+          position: 'relative'
+        }}>
+          <div style={{position: 'absolute', top: '8px', left: '8px', width: '6px', height: '6px', background: '#D4AF37', borderRadius: '50%', boxShadow: '0 0 8px rgba(212,175,55,0.8)'}} />
+          <div style={{position: 'absolute', top: '8px', right: '8px', width: '6px', height: '6px', background: '#D4AF37', borderRadius: '50%', boxShadow: '0 0 8px rgba(212,175,55,0.8)'}} />
+          <div style={{position: 'absolute', bottom: '8px', left: '8px', width: '6px', height: '6px', background: '#D4AF37', borderRadius: '50%', boxShadow: '0 0 8px rgba(212,175,55,0.8)'}} />
+          <div style={{position: 'absolute', bottom: '8px', right: '8px', width: '6px', height: '6px', background: '#D4AF37', borderRadius: '50%', boxShadow: '0 0 8px rgba(212,175,55,0.8)'}} />
+
+          <h3 style={{
+            fontFamily: "'Cinzel', serif",
+            fontSize: '0.9rem',
+            letterSpacing: '0.2em',
+            color: '#D4AF37',
+            marginBottom: '1.5rem',
+            textAlign: 'center'
+          }}>
+            DECISION DISTRIBUTION
+          </h3>
+
+          <DecisionPieChart data={stats.decisionBreakdown} />
+        </div>
+
+        {/* Agent Performance */}
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(15,15,15,0.98) 0%, rgba(25,25,25,0.98) 100%)',
+          border: '2px solid rgba(212,175,55,0.3)',
+          padding: '2rem',
+          position: 'relative'
+        }}>
+          <div style={{position: 'absolute', top: '8px', left: '8px', width: '6px', height: '6px', background: '#D4AF37', borderRadius: '50%', boxShadow: '0 0 8px rgba(212,175,55,0.8)'}} />
+          <div style={{position: 'absolute', top: '8px', right: '8px', width: '6px', height: '6px', background: '#D4AF37', borderRadius: '50%', boxShadow: '0 0 8px rgba(212,175,55,0.8)'}} />
+          <div style={{position: 'absolute', bottom: '8px', left: '8px', width: '6px', height: '6px', background: '#D4AF37', borderRadius: '50%', boxShadow: '0 0 8px rgba(212,175,55,0.8)'}} />
+          <div style={{position: 'absolute', bottom: '8px', right: '8px', width: '6px', height: '6px', background: '#D4AF37', borderRadius: '50%', boxShadow: '0 0 8px rgba(212,175,55,0.8)'}} />
+
+          <h3 style={{
+            fontFamily: "'Cinzel', serif",
+            fontSize: '0.9rem',
+            letterSpacing: '0.2em',
+            color: '#D4AF37',
+            marginBottom: '1.5rem',
+            textAlign: 'center'
+          }}>
+            AGENT WIN RATE
+          </h3>
+
+          <AgentPerformanceChart data={stats.agentPerformance} />
+        </div>
       </div>
 
+      {/* Bottom: Confidence Timeline */}
       <div style={{
         background: 'linear-gradient(135deg, rgba(15,15,15,0.98) 0%, rgba(25,25,25,0.98) 100%)',
         border: '2px solid rgba(212,175,55,0.3)',
@@ -274,23 +461,22 @@ const AnalyticsDashboard = ({ totalDebates, latestDebate, councilMembers }) => {
           marginBottom: '1.5rem'
         }}>
           <div>
-            <div style={{
+            <h3 style={{
               fontFamily: "'Cinzel', serif",
-              fontSize: '1rem',
-              fontWeight: 600,
+              fontSize: '0.9rem',
               letterSpacing: '0.2em',
               color: '#D4AF37',
               marginBottom: '0.5rem'
             }}>
-              CONSENSUS CONFIDENCE TREND
-            </div>
+              CONFIDENCE TREND
+            </h3>
             <div style={{
               fontFamily: "'Playfair Display', serif",
               fontStyle: 'italic',
-              fontSize: '0.8rem',
+              fontSize: '0.75rem',
               color: '#A0A0A0'
             }}>
-              Last {stats.consensusHistory.length} debates
+              Last {stats.confidenceTrend.length} debates
             </div>
           </div>
 
@@ -301,7 +487,7 @@ const AnalyticsDashboard = ({ totalDebates, latestDebate, councilMembers }) => {
               letterSpacing: '0.1em',
               marginBottom: '0.25rem'
             }}>
-              TOTAL DEBATES
+              CURRENT AVG
             </div>
             <div style={{
               fontSize: '2rem',
@@ -309,7 +495,7 @@ const AnalyticsDashboard = ({ totalDebates, latestDebate, councilMembers }) => {
               color: '#D4AF37',
               fontFamily: "'Space Mono', monospace"
             }}>
-              {totalDebates}
+              {stats.avgConfidence}%
             </div>
           </div>
         </div>
@@ -319,121 +505,27 @@ const AnalyticsDashboard = ({ totalDebates, latestDebate, councilMembers }) => {
           border: '1px solid rgba(212,175,55,0.2)',
           padding: '1rem'
         }}>
-          <ConfidenceSparkline history={stats.consensusHistory} />
+          <ConfidenceTimeline data={stats.confidenceTrend} />
 
           <div style={{
             display: 'flex',
-            justifyContent: 'space-between',
-            marginTop: '0.5rem',
+            justifyContent: 'center',
+            gap: '2rem',
+            marginTop: '1rem',
             fontSize: '0.7rem',
-            color: '#808080',
             fontFamily: "'Space Mono', monospace"
           }}>
-            <span>Debate #{Math.max(0, totalDebates - 10)}</span>
-            <span style={{color: '#D4AF37'}}>Confidence Level</span>
-            <span>Debate #{totalDebates}</span>
-          </div>
-        </div>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '1rem',
-          marginTop: '1.5rem'
-        }}>
-          <div style={{
-            background: 'rgba(10,10,10,0.8)',
-            border: '1px solid rgba(212,175,55,0.2)',
-            padding: '1rem',
-            textAlign: 'center'
-          }}>
-            <div style={{
-              fontSize: '0.65rem',
-              color: '#808080',
-              letterSpacing: '0.1em',
-              marginBottom: '0.5rem'
-            }}>
-              CONSENSUS RATE
+            <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+              <div style={{width: '12px', height: '12px', background: '#6B9A96', border: '1px solid #000'}} />
+              <span style={{color: '#6B9A96'}}>BUY</span>
             </div>
-            <div style={{
-              fontSize: '1.5rem',
-              fontWeight: 700,
-              color: '#6B9A96',
-              fontFamily: "'Space Mono', monospace"
-            }}>
-              {totalDebates > 0 ? '87%' : '0%'}
+            <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+              <div style={{width: '12px', height: '12px', background: '#D0D0D0', border: '1px solid #000'}} />
+              <span style={{color: '#D0D0D0'}}>SELL</span>
             </div>
-            <div style={{
-              fontSize: '0.6rem',
-              color: '#6B9A96',
-              marginTop: '0.25rem',
-              fontFamily: "'Space Mono', monospace"
-            }}>
-              MAJORITY OR HIGHER
-            </div>
-          </div>
-
-          <div style={{
-            background: 'rgba(10,10,10,0.8)',
-            border: '1px solid rgba(212,175,55,0.2)',
-            padding: '1rem',
-            textAlign: 'center'
-          }}>
-            <div style={{
-              fontSize: '0.65rem',
-              color: '#808080',
-              letterSpacing: '0.1em',
-              marginBottom: '0.5rem'
-            }}>
-              UPTIME
-            </div>
-            <div style={{
-              fontSize: '1.5rem',
-              fontWeight: 700,
-              color: '#D4AF37',
-              fontFamily: "'Space Mono', monospace"
-            }}>
-              99.9%
-            </div>
-            <div style={{
-              fontSize: '0.6rem',
-              color: '#D4AF37',
-              marginTop: '0.25rem',
-              fontFamily: "'Space Mono', monospace"
-            }}>
-              CONTINUOUS OPERATION
-            </div>
-          </div>
-
-          <div style={{
-            background: 'rgba(10,10,10,0.8)',
-            border: '1px solid rgba(212,175,55,0.2)',
-            padding: '1rem',
-            textAlign: 'center'
-          }}>
-            <div style={{
-              fontSize: '0.65rem',
-              color: '#808080',
-              letterSpacing: '0.1em',
-              marginBottom: '0.5rem'
-            }}>
-              AVG RESPONSE TIME
-            </div>
-            <div style={{
-              fontSize: '1.5rem',
-              fontWeight: 700,
-              color: '#A89968',
-              fontFamily: "'Space Mono', monospace"
-            }}>
-              3.2s
-            </div>
-            <div style={{
-              fontSize: '0.6rem',
-              color: '#A89968',
-              marginTop: '0.25rem',
-              fontFamily: "'Space Mono', monospace"
-            }}>
-              PER DEBATE CYCLE
+            <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+              <div style={{width: '12px', height: '12px', background: '#A89968', border: '1px solid #000'}} />
+              <span style={{color: '#A89968'}}>HOLD</span>
             </div>
           </div>
         </div>
