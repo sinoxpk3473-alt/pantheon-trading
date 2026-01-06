@@ -7,9 +7,26 @@
 [![Backend](https://img.shields.io/badge/backend-deployed-success)](https://pantheon-backend-hll6.onrender.com)
 [![License](https://img.shields.io/badge/license-MIT-orange)](LICENSE)
 
-![Pantheon Dashboard](./screenshots/dashboard.png)
 
 ---
+
+## 📸 Screenshots
+
+### Main Dashboard
+![Dashboard](./screenshots/dashboard.png)
+*Circuit board aesthetic with real-time AI council*
+
+### Council Members
+![Council](./screenshots/council.png)
+*Three AI agents with distinct personalities and risk profiles*
+
+### Performance Analytics
+![Analytics](./screenshots/analytics.png)
+*Decision distribution and confidence trends*
+
+### Blockchain Verification
+![Blockchain](./screenshots/blockchain.png)
+*Immutable record on Polygon Amoy testnet*
 
 ## 🎯 Overview
 
@@ -115,6 +132,48 @@ Every debate is recorded on Polygon Amoy testnet:
 
 ---
 
+## 🔄 Data Flow
+```
+USER REQUEST
+    │
+    ▼
+┌─────────────────────────────────────┐
+│  FRONTEND (React)                   │
+│  - Fetches latest debate             │
+│  - Reads from blockchain             │
+│  - Auto-refresh every 10s            │
+└────────────┬────────────────────────┘
+             │
+             │ ethers.js
+             ▼
+┌─────────────────────────────────────┐
+│  SMART CONTRACT (Polygon Amoy)      │
+│  - getLatestDebate()                │
+│  - getTotalDebates()                │
+│  - Immutable storage                │
+└────────────▲────────────────────────┘
+             │
+             │ recordDebate()
+             │
+┌─────────────────────────────────────┐
+│  BACKEND (Node.js)                  │
+│  Every 10 seconds:                  │
+│  1. Fetch ETH price (CoinGecko)     │
+│  2. Query 3 AI agents               │
+│  3. Calculate consensus             │
+│  4. Write to blockchain             │
+└────────────┬────────────────────────┘
+             │
+             │ API calls
+             ▼
+┌─────────────────────────────────────┐
+│  GOOGLE GEMINI AI                   │
+│  - Analyst (conservative)           │
+│  - Skeptic (defensive)              │
+│  - Degen (aggressive)               │
+└─────────────────────────────────────┘
+```
+
 ## 🛠️ Tech Stack
 
 ### Frontend
@@ -143,6 +202,73 @@ Every debate is recorded on Polygon Amoy testnet:
 - **Polygon RPC** - Blockchain access
 
 ---
+
+## 🔌 API Endpoints
+
+### Backend API
+
+**Base URL**: `https://pantheon-backend-hll6.onrender.com`
+
+#### Health Check
+```http
+GET /health
+```
+
+**Response:**
+```json
+{
+  "status": "ok",
+  "timestamp": "2025-01-06T12:00:00.000Z"
+}
+```
+
+#### Get Latest Debate
+```http
+GET /api/debate/latest
+```
+
+**Response:**
+```json
+{
+  "id": 42,
+  "timestamp": 1704542400,
+  "symbol": "ETH",
+  "analystView": "HOLD|75|Market consolidating",
+  "skepticView": "HOLD|60|Risk of correction",
+  "degenView": "BUY|90|Breakout imminent",
+  "consensus": "HOLD|MAJORITY|75",
+  "finalConfidence": 75
+}
+```
+
+### Smart Contract
+
+**Network**: Polygon Amoy Testnet  
+**Address**: `0x13713f5E8fbfD05E7B7DcA81E231D89D51D2ccB3`
+
+#### Read Functions
+```solidity
+// Get total number of debates
+function getTotalDebates() external view returns (uint256)
+
+// Get latest debate record
+function getLatestDebate() external view returns (DebateRecord)
+
+// Get specific debate by ID
+function getDebate(uint256 id) external view returns (DebateRecord)
+```
+
+#### Example (ethers.js)
+```javascript
+const contract = new ethers.Contract(
+  "0x13713f5E8fbfD05E7B7DcA81E231D89D51D2ccB3",
+  ABI,
+  provider
+);
+
+const total = await contract.getTotalDebates();
+const latest = await contract.getLatestDebate();
+```
 
 ## 📦 Installation & Setup
 
